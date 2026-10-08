@@ -92,3 +92,103 @@ export async function signUpAndVerify(ctx: TestContext, email: string): Promise<
   });
   return cookiesFrom(response);
 }
+
+/** A signed-in organizer: returns the session cookie. */
+export function newOrganizer(ctx: TestContext): Promise<string> {
+  return signUpAndVerify(ctx, uniqueEmail("organizer"));
+}
+
+/** JSON request helper. `cookie: null` sends an anonymous request. */
+export async function api<T = unknown>(
+  ctx: TestContext,
+  method: string,
+  path: string,
+  options: { cookie?: string | null; body?: unknown; ip?: string } = {},
+): Promise<{ status: number; body: T; response: Response }> {
+  const init = jsonRequest(method, options.body ?? {}, {
+    ...(options.cookie ? { cookie: options.cookie } : {}),
+    ...(options.ip ? { ip: options.ip } : {}),
+  });
+  if (method === "GET" || method === "DELETE") delete init.body;
+  const response = await ctx.app.request(path, init);
+  const text = await response.clone().text();
+  return { status: response.status, body: (text ? JSON.parse(text) : null) as T, response };
+}
+
+const DAY = 24 * 60 * 60 * 1000;
+
+export function eventInput(overrides: Record<string, unknown> = {}) {
+  const start = new Date(Date.now() + 30 * DAY);
+  return {
+    name: "Meetup de prueba",
+    description: "Una noche de charlas",
+    startsAt: start.toISOString(),
+    endsAt: new Date(start.getTime() + 3 * 60 * 60 * 1000).toISOString(),
+    timezone: "America/Mexico_City",
+    venueName: "Auditorio Central",
+    venueAddress: "Av. Juárez 1, Guadalajara",
+    capacity: null,
+    registrationMode: "open",
+    registrationDeadline: null,
+    registrationFields: [],
+    ...overrides,
+  };
+}
+
+export interface EventBody {
+  id: string;
+  slug: string;
+  status: string;
+  registeredCount: number;
+  organizationId: string;
+}
+
+export async function createEvent(
+  ctx: TestContext,
+  cookie: string,
+  overrides: Record<string, unknown> = {},
+) {
+  const created = await api<EventBody>(ctx, "POST", "/api/v1/events", {
+    cookie,
+    body: eventInput(overrides),
+  });
+  if (created.status !== 201) throw new Error(`create failed: ${JSON.stringify(created.body)}`);
+  return created.body;
+}
+
+export async function createPublishedEvent(
+  ctx: TestContext,
+  cookie: string,
+  overrides: Record<string, unknown> = {},
+): Promise<EventBody> {
+  const event = await createEvent(ctx, cookie, overrides);
+  const published = await api<EventBody>(ctx, "POST", `/api/v1/events/${event.id}/publish`, {
+    cookie,
+  });
+  if (published.status !== 200) throw new Error("publish failed");
+  return published.body;
+}
+
+export function register(
+  ctx: TestContext,
+  slug: string,
+  input: { email: string; name?: string; locale?: string; answers?: Record<string, unknown> },
+  ip?: string,
+) {
+  return api<{ code?: string; issues?: { path: unknown[] }[] }>(
+    ctx,
+    "POST",
+    `/api/v1/public/events/${slug}/registrations`,
+    {
+      body: { name: "Asistente Uno", locale: "es-MX", answers: {}, ...input },
+      ...(ip ? { ip } : {}),
+    },
+  );
+}
+
+/** The secret "my ticket" token from the latest ticket email sent to `email`. */
+export async function ticketAccessToken(ctx: TestContext, email: string): Promise<string> {
+  const mail = await latestEmail(ctx, email);
+  if (mail?.kind !== "ticket") throw new Error("No ticket email");
+  return new URL(String(mail.payload.url)).pathname.split("/").at(-1)!;
+}

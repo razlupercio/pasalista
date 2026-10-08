@@ -36,6 +36,9 @@ services:
       DATABASE_URL: postgres://pasalista:pasalista@postgres:5432/pasalista
       PUBLIC_URL: ${PUBLIC_URL:-http://localhost:3000}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-dev-only-insecure-secret-change-me-0000000000}
+      # Encrypts per-event QR signing keys. Empty = development default (refused in production).
+      QR_KEY_ENCRYPTION_KEY: ${QR_KEY_ENCRYPTION_KEY:-}
+      QR_KEY_ENCRYPTION_KEY_ID: ${QR_KEY_ENCRYPTION_KEY_ID:-k1}
       # No appending proxy locally (Next.js forwards X-Forwarded-For unchanged). Set to 1 behind
       # a reverse proxy such as nginx or Caddy in production.
       TRUSTED_PROXY_HOPS: ${TRUSTED_PROXY_HOPS:-0}

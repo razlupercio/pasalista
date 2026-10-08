@@ -2,6 +2,7 @@
 import type { ErrorCode, Problem } from "@pasalista/core";
 import type { Context } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
+import { redactPath } from "./redact.ts";
 import type { AppEnv } from "./types.ts";
 
 const titles: Record<ErrorCode, string> = {
@@ -14,6 +15,10 @@ const titles: Record<ErrorCode, string> = {
   rate_limited: "Too many requests",
   invalid_origin: "Invalid origin",
   internal_error: "Internal server error",
+  invalid_state: "Invalid state for this operation",
+  registration_closed: "Registration is closed",
+  event_full: "Event is full",
+  already_registered: "Already registered",
 };
 
 export class ApiError extends Error {
@@ -36,8 +41,8 @@ export class ApiError extends Error {
 }
 
 /** Builds an RFC 9457 `application/problem+json` response. Never include secrets or personal data. */
-export function problem(
-  c: Context<AppEnv>,
+export function problem<E extends AppEnv>(
+  c: Context<E>,
   status: ContentfulStatusCode,
   code: ErrorCode,
   extra: { detail?: string; issues?: Problem["issues"] } = {},
@@ -47,7 +52,7 @@ export function problem(
     title: titles[code],
     status,
     code,
-    instance: new URL(c.req.url).pathname,
+    instance: redactPath(new URL(c.req.url).pathname),
     requestId: c.get("requestId"),
     ...(extra.detail ? { detail: extra.detail } : {}),
     ...(extra.issues ? { issues: extra.issues } : {}),

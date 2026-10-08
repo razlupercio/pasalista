@@ -5,6 +5,13 @@ import { z } from "zod";
 /** Development-only secret. The API refuses to start with it when NODE_ENV=production. */
 export const DEV_AUTH_SECRET = "dev-only-insecure-secret-change-me-0000000000";
 
+/** Development-only key-encryption key (32 bytes, base64url). Refused in production. */
+export const DEV_QR_KEY_ENCRYPTION_KEY = "ZGV2LW9ubHktaW5zZWN1cmUta2VrLWNoYW5nZS1tZSE";
+
+const base64Url32Bytes = z
+  .string()
+  .regex(/^[A-Za-z0-9_-]{43}$/, "must be 32 bytes encoded as base64url (43 characters)");
+
 const booleanString = z
   .enum(["true", "false", "1", "0"])
   .transform((value) => value === "true" || value === "1");
@@ -21,6 +28,13 @@ const envSchema = z
     /** Public origin of the web app (single origin, see ADR-0004). Used for links and CSRF checks. */
     PUBLIC_URL: z.url().transform((url) => url.replace(/\/+$/, "")),
     BETTER_AUTH_SECRET: z.string().min(32),
+    /** Encrypts per-event QR signing keys at rest (AES-256-GCM, ADR-0002). */
+    QR_KEY_ENCRYPTION_KEY: base64Url32Bytes,
+    /** Identifier stored with each encrypted key so the KEK can be rotated later. */
+    QR_KEY_ENCRYPTION_KEY_ID: z
+      .string()
+      .regex(/^[a-z0-9-]{1,32}$/)
+      .default("k1"),
     /**
      * Number of reverse proxies we control that append the client address to
      * `X-Forwarded-For` (e.g. nginx, Caddy, Traefik). The Next.js rewrite does NOT count: it
@@ -45,6 +59,13 @@ const envSchema = z
         message: "The development secret cannot be used in production",
       });
     }
+    if (env.NODE_ENV === "production" && env.QR_KEY_ENCRYPTION_KEY === DEV_QR_KEY_ENCRYPTION_KEY) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["QR_KEY_ENCRYPTION_KEY"],
+        message: "The development key-encryption key cannot be used in production",
+      });
+    }
   });
 
 export type Env = z.infer<typeof envSchema>;
@@ -54,6 +75,7 @@ const developmentDefaults: Record<string, string> = {
   DATABASE_URL: DEFAULT_DEV_DATABASE_URL,
   PUBLIC_URL: "http://localhost:3000",
   BETTER_AUTH_SECRET: DEV_AUTH_SECRET,
+  QR_KEY_ENCRYPTION_KEY: DEV_QR_KEY_ENCRYPTION_KEY,
   SMTP_HOST: "localhost",
   SMTP_PORT: "1025",
   EMAIL_FROM: "PasaLista <no-reply@pasalista.localhost>",

@@ -154,6 +154,8 @@ erDiagram
     jsonb answers "extra field answers"
     bytea ticket_access_hash UK "my-ticket link"
     timestamptz created_at
+    timestamptz updated_at
+    timestamptz cancelled_at "re-registration reactivates the row"
   }
   tickets {
     uuid id PK

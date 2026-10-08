@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import type { Locale } from "@pasalista/core";
 import { headers } from "next/headers";
+import { redirect } from "@/i18n/navigation.ts";
 
 const apiInternalUrl = process.env.API_INTERNAL_URL ?? "http://localhost:3001";
 
@@ -32,4 +34,11 @@ export function getSession(): Promise<Session | null> {
 
 export function getActiveOrganization(): Promise<Organization | null> {
   return authGet<Organization>("/organization/get-full-organization");
+}
+
+/** For organizer pages: the session, or a redirect to sign in (keeps the locale). */
+export async function requireSession(locale: Locale): Promise<Session> {
+  const session = await getSession();
+  if (!session) return redirect({ href: "/sign-in", locale });
+  return session;
 }

@@ -9,3 +9,17 @@ export interface AppEnv {
     clientIp: string;
   };
 }
+
+export interface SessionUser {
+  id: string;
+  name: string;
+  email: string;
+}
+
+/** Routes behind `requireUser`: the session user is always present. */
+export interface AuthedEnv {
+  Variables: AppEnv["Variables"] & {
+    user: SessionUser;
+    activeOrganizationId: string | null;
+  };
+}

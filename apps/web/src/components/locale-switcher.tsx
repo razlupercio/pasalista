@@ -7,7 +7,7 @@ import { useTransition } from "react";
 import { usePathname, useRouter } from "@/i18n/navigation.ts";
 
 const selectClass =
-  "min-h-11 rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  "min-h-9 rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 export function LocaleSwitcher() {
   const t = useTranslations("common");

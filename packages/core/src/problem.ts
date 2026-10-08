@@ -15,6 +15,10 @@ export const errorCodes = [
   "rate_limited",
   "invalid_origin",
   "internal_error",
+  "invalid_state",
+  "registration_closed",
+  "event_full",
+  "already_registered",
 ] as const;
 export type ErrorCode = (typeof errorCodes)[number];
 

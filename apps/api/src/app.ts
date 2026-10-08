@@ -14,7 +14,12 @@ import { ApiError, problem } from "./errors.ts";
 import { originCheck } from "./middleware/origin-check.ts";
 import { MemoryRateLimitStore, rateLimit, type RateLimitStore } from "./middleware/rate-limit.ts";
 import { CLIENT_IP_HEADER, requestContext } from "./middleware/request-context.ts";
+import { loadKek } from "./crypto/key-encryption.ts";
+import { attendeeRoutes, eventRoutes } from "./routes/events.ts";
 import { healthRoutes } from "./routes/health.ts";
+import { validationHook } from "./routes/openapi.ts";
+import { publicRoutes } from "./routes/public.ts";
+import type { ServiceDeps } from "./services/context.ts";
 import type { AppEnv } from "./types.ts";
 
 export const API_PREFIX = "/api/v1";
@@ -26,24 +31,22 @@ export interface AppDeps {
   auth: Auth;
   logger: Logger;
   rateLimitStore?: RateLimitStore;
+  /** Clock override for tests. */
+  now?: () => Date;
 }
 
 export function createApp(deps: AppDeps) {
   const { env, db, auth, logger } = deps;
   const rateLimitStore = deps.rateLimitStore ?? new MemoryRateLimitStore();
 
-  const app = new OpenAPIHono<AppEnv>({
-    defaultHook: (result, c) => {
-      if (!result.success) {
-        return problem(c, 400, "validation_failed", {
-          issues: result.error.issues.map((issue) => ({
-            path: issue.path.filter((p): p is string | number => typeof p !== "symbol"),
-            message: issue.message,
-          })),
-        });
-      }
-    },
-  });
+  const services: ServiceDeps = {
+    db,
+    kek: loadKek(env.QR_KEY_ENCRYPTION_KEY, env.QR_KEY_ENCRYPTION_KEY_ID),
+    publicUrl: env.PUBLIC_URL,
+    ...(deps.now ? { now: deps.now } : {}),
+  };
+
+  const app = new OpenAPIHono<AppEnv>({ defaultHook: validationHook });
 
   app.use(requestId({ headerName: "X-Request-Id" }));
   app.use(
@@ -105,7 +108,19 @@ export function createApp(deps: AppDeps) {
     }),
   );
   api.route("/", healthRoutes({ db, version: env.APP_VERSION }));
+  api.route("/events", eventRoutes(services, auth));
+  api.route("/attendees", attendeeRoutes(services, auth));
+  api.route(
+    "/public",
+    publicRoutes(services, { store: rateLimitStore, enabled: env.RATE_LIMIT_ENABLED }),
+  );
   app.route(API_PREFIX, api);
+  app.openAPIRegistry.registerComponent("securitySchemes", "session", {
+    type: "apiKey",
+    in: "cookie",
+    name: "pasalista.session_token",
+    description: "Better Auth session cookie (web) or `Authorization: Bearer` (mobile)",
+  });
 
   app.doc31(OPENAPI_PATH, {
     openapi: "3.1.0",

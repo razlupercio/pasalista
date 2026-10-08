@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import type { MiddlewareHandler } from "hono";
 import type { Logger } from "pino";
+import { redactPath } from "../redact.ts";
 import type { AppEnv } from "../types.ts";
 
 /**
@@ -49,7 +50,7 @@ export function requestContext(options: {
     logger.info(
       {
         method: c.req.method,
-        path: c.req.path,
+        path: redactPath(c.req.path),
         status: c.res.status,
         durationMs: Math.round(performance.now() - start),
       },

@@ -14,7 +14,13 @@
       "system": "Sistema"
     },
     "loading": "Cargando…",
-    "skipToContent": "Saltar al contenido"
+    "skipToContent": "Saltar al contenido",
+    "optional": "(opcional)",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "back": "Volver",
+    "yes": "Sí",
+    "no": "No"
   },
   "nav": {
     "signIn": "Iniciar sesión",
@@ -85,7 +91,148 @@
     "title": "Panel",
     "greeting": "Hola, {name}",
     "organization": "Organización: {name}",
-    "emptyEvents": "Aquí aparecerán tus eventos."
+    "eventsTitle": "Tus eventos",
+    "emptyEvents": "Aún no tienes eventos. Crea el primero para empezar a registrar asistentes.",
+    "newEvent": "Crear evento"
+  },
+  "events": {
+    "status": {
+      "draft": "Borrador",
+      "published": "Publicado",
+      "closed": "Cerrado"
+    },
+    "registeredCount": "{count, plural, =0 {Sin registros} one {# registrado} other {# registrados}}",
+    "registeredOfCapacity": "{count} de {capacity} lugares",
+    "form": {
+      "createTitle": "Nuevo evento",
+      "editTitle": "Editar evento",
+      "name": "Nombre del evento",
+      "description": "Descripción",
+      "startsAt": "Inicio",
+      "endsAt": "Fin",
+      "timezone": "Zona horaria",
+      "venueName": "Lugar",
+      "venueAddress": "Dirección",
+      "capacity": "Cupo",
+      "capacityHint": "Déjalo vacío para no limitar el número de asistentes.",
+      "registrationMode": "Registro",
+      "modeOpen": "Abierto",
+      "modeOpenHint": "Cualquier persona con el enlace puede registrarse.",
+      "modeClosed": "Lista cerrada",
+      "modeClosedHint": "Solo las personas que invites reciben boleto (la carga de invitados llega en la siguiente fase).",
+      "registrationDeadline": "Fecha límite de registro",
+      "fieldsTitle": "Preguntas adicionales",
+      "fieldsHint": "Además de nombre y correo. Hasta {max} preguntas.",
+      "addField": "Agregar pregunta",
+      "fieldLabel": "Pregunta",
+      "fieldType": "Tipo de respuesta",
+      "fieldTypes": {
+        "text": "Texto",
+        "select": "Opción de una lista",
+        "checkbox": "Casilla (sí/no)"
+      },
+      "fieldRequired": "Obligatoria",
+      "fieldOptions": "Opciones",
+      "fieldOptionsHint": "Una opción por línea.",
+      "removeField": "Quitar pregunta {number}",
+      "create": "Crear borrador",
+      "save": "Guardar cambios",
+      "saved": "Cambios guardados.",
+      "invalid": "Revisa los campos marcados.",
+      "required": "Este campo es obligatorio.",
+      "endsBeforeStart": "El fin debe ser después del inicio.",
+      "deadlineAfterEnd": "La fecha límite no puede ser después de que termine el evento.",
+      "capacityInvalid": "Escribe un número entero mayor que cero.",
+      "optionsRequired": "Agrega al menos una opción."
+    },
+    "detail": {
+      "when": "Cuándo",
+      "where": "Dónde",
+      "publicLink": "Enlace público de registro",
+      "copyLink": "Copiar enlace",
+      "copied": "Enlace copiado.",
+      "draftHint": "El evento es un borrador: nadie puede verlo hasta que lo publiques.",
+      "publish": "Publicar",
+      "close": "Cerrar registro",
+      "reopen": "Volver a publicar",
+      "edit": "Editar",
+      "delete": "Eliminar borrador",
+      "deleteConfirm": "¿Eliminar este borrador? No se puede deshacer.",
+      "security": "Seguridad",
+      "rotateKey": "Rotar llave de firma",
+      "rotateKeyHint": "Los boletos nuevos se firman con una llave nueva. Los boletos ya emitidos siguen siendo válidos.",
+      "rotateKeyDone": "Llave de firma activa: versión {version}."
+    },
+    "attendees": {
+      "title": "Asistentes",
+      "empty": "Todavía no hay registros.",
+      "name": "Nombre",
+      "email": "Correo",
+      "status": "Registro",
+      "ticket": "Boleto",
+      "actions": "Acciones",
+      "statuses": {
+        "active": "Activo",
+        "cancelled": "Cancelado"
+      },
+      "ticketStatuses": {
+        "active": "Válido",
+        "superseded": "Reemplazado",
+        "revoked": "Revocado",
+        "none": "Sin boleto"
+      },
+      "reissue": "Enviar boleto nuevo",
+      "reissueConfirm": "Se generará un QR y un enlace nuevos y se enviarán por correo. El QR anterior dejará de funcionar.",
+      "revoke": "Revocar QR",
+      "revokeConfirm": "El QR actual dejará de ser válido. Podrás enviar uno nuevo después.",
+      "cancel": "Cancelar registro",
+      "cancelConfirm": "Se cancelará el registro y su QR dejará de ser válido.",
+      "done": "Listo."
+    }
+  },
+  "publicEvent": {
+    "organizedBy": "Organiza: {name}",
+    "when": "Cuándo",
+    "where": "Dónde",
+    "registerTitle": "Regístrate",
+    "deadline": "Registro abierto hasta el {date}.",
+    "submit": "Registrarme",
+    "successTitle": "¡Listo! Ya estás registrado",
+    "successBody": "Te enviamos tu boleto con el código QR a tu correo.",
+    "states": {
+      "invitation_only": "El registro a este evento es solo por invitación.",
+      "deadline_passed": "La fecha límite de registro ya pasó.",
+      "full": "El evento ya no tiene lugares disponibles.",
+      "closed": "El registro a este evento está cerrado."
+    },
+    "required": "Este campo es obligatorio.",
+    "invalidOption": "Elige una opción de la lista.",
+    "selectPlaceholder": "Elige una opción"
+  },
+  "ticket": {
+    "title": "Tu boleto",
+    "holder": "Boleto de {name}",
+    "showAtEntrance": "Muestra este código QR en la entrada.",
+    "qrAlt": "Código QR de tu boleto para {eventName}",
+    "download": "Descargar QR",
+    "addToHome": "Tip: agrega esta página a tu pantalla de inicio desde el menú de tu navegador para tenerla a la mano el día del evento.",
+    "cancel": "Cancelar mi registro",
+    "cancelConfirm": "¿Seguro que quieres cancelar tu registro? Tu QR dejará de ser válido.",
+    "cancelled": "Tu registro está cancelado. Si cambias de opinión, puedes volver a registrarte desde la página del evento.",
+    "invalid": "Este boleto ya no es válido. Si crees que es un error, contacta a quien organiza el evento.",
+    "eventPage": "Ver página del evento"
+  },
+  "apiErrors": {
+    "validation_failed": "Revisa los datos e inténtalo de nuevo.",
+    "not_found": "No encontramos lo que buscas.",
+    "unauthorized": "Tu sesión terminó. Vuelve a iniciar sesión.",
+    "forbidden": "No tienes permiso para hacer esto.",
+    "already_registered": "Este correo ya está registrado en el evento.",
+    "event_full": "El evento ya no tiene lugares disponibles.",
+    "registration_closed": "El registro a este evento está cerrado.",
+    "invalid_state": "Esta acción no está disponible en el estado actual.",
+    "rate_limited": "Demasiados intentos. Espera un momento e inténtalo de nuevo.",
+    "generic": "Algo salió mal. Inténtalo de nuevo."
   },
   "emails": {
     "footer": "Recibiste este correo porque alguien usó esta dirección en PasaLista. Si no fuiste tú, ignóralo.",
@@ -106,6 +253,16 @@
       "greeting": "Hola:",
       "body": "Usa este enlace para iniciar sesión. Expira en 5 minutos y solo funciona una vez.",
       "cta": "Iniciar sesión"
+    },
+    "ticket": {
+      "subject": "Tu boleto para {eventName}",
+      "greeting": "Hola, {name}:",
+      "body": "Tu registro a {eventName} está confirmado.",
+      "whenLabel": "Cuándo",
+      "whereLabel": "Dónde",
+      "qrHint": "Muestra este código QR en la entrada. También puedes abrir tu boleto desde el enlace.",
+      "qrAlt": "Código QR de tu boleto",
+      "cta": "Ver mi boleto"
     }
   }
 }
