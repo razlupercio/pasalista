@@ -60,7 +60,7 @@ export async function processOutboxBatch(
     for (const row of due) {
       try {
         if (!isEmailKind(row.kind)) throw new Error(`Unknown email kind: ${row.kind}`);
-        const rendered = renderEmail(row.kind, row.locale, row.payload);
+        const rendered = await renderEmail(row.kind, row.locale, row.payload);
         await transport.send({ to: row.toEmail, ...rendered });
         await tx
           .update(emailOutbox)

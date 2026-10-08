@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import nodemailer from "nodemailer";
 import type { Env } from "../env.ts";
+import type { EmailAttachment } from "./templates.ts";
 
 export interface OutgoingEmail {
   to: string;
   subject: string;
   text: string;
   html: string;
+  attachments?: EmailAttachment[];
 }
 
 export interface EmailTransport {

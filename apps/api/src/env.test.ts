@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { describe, expect, it } from "vitest";
-import { DEV_AUTH_SECRET, loadEnv } from "./env.ts";
+import { DEV_AUTH_SECRET, DEV_QR_KEY_ENCRYPTION_KEY, loadEnv } from "./env.ts";
 
 const production = {
   NODE_ENV: "production",
   DATABASE_URL: "postgres://u:p@db:5432/pasalista",
   PUBLIC_URL: "https://events.example.org/",
   BETTER_AUTH_SECRET: "x".repeat(48),
+  QR_KEY_ENCRYPTION_KEY: "q".repeat(43),
   SMTP_HOST: "smtp.example.org",
   SMTP_PORT: "587",
   EMAIL_FROM: "PasaLista <no-reply@example.org>",
@@ -38,5 +39,19 @@ describe("loadEnv", () => {
     expect(() => loadEnv({ ...production, BETTER_AUTH_SECRET: secret })).toThrow(
       expect.objectContaining({ message: expect.not.stringContaining(secret) as unknown }),
     );
+  });
+});
+
+describe("QR key-encryption key", () => {
+  it("must be 32 bytes in base64url", () => {
+    expect(() => loadEnv({ ...production, QR_KEY_ENCRYPTION_KEY: "too-short" })).toThrow(
+      /QR_KEY_ENCRYPTION_KEY/,
+    );
+  });
+
+  it("refuses the development key in production", () => {
+    expect(() =>
+      loadEnv({ ...production, QR_KEY_ENCRYPTION_KEY: DEV_QR_KEY_ENCRYPTION_KEY }),
+    ).toThrow(/QR_KEY_ENCRYPTION_KEY/);
   });
 });
