@@ -205,6 +205,7 @@ export const attendeeSchema = z.object({
   status: z.enum(attendeeStatuses),
   source: z.enum(attendeeSources),
   answers: z.record(z.string(), answerValueSchema),
+  /** Latest ticket state; null when the invitation has not been sent yet. */
   ticketStatus: z.enum(ticketStatuses).nullable(),
   createdAt: instantSchema,
 });
