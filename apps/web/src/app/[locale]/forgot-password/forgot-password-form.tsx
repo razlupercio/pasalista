@@ -13,6 +13,7 @@ import { Alert } from "@/components/ui/alert.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Link } from "@/i18n/navigation.ts";
 import { authClient } from "@/lib/auth-client.ts";
+import { useHydrated } from "@/lib/use-hydrated.ts";
 import { authErrorKey, type AuthErrorKey } from "@/lib/auth-errors.ts";
 
 export function ForgotPasswordForm() {
@@ -21,6 +22,7 @@ export function ForgotPasswordForm() {
   const [error, setError] = useState<AuthErrorKey | null>(null);
   const [sent, setSent] = useState(false);
   const [pending, setPending] = useState(false);
+  const hydrated = useHydrated();
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -51,14 +53,14 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <form noValidate onSubmit={onSubmit} className="flex flex-col gap-5">
+    <form method="post" noValidate onSubmit={onSubmit} className="flex flex-col gap-5">
       {error ? (
         <Alert tone="error">
           {t(`errors.${error}`, { min: PASSWORD_MIN_LENGTH, max: PASSWORD_MAX_LENGTH })}
         </Alert>
       ) : null}
       <FormField id="email" type="email" label={t("fields.email")} autoComplete="email" required />
-      <Button type="submit" disabled={pending} aria-busy={pending}>
+      <Button type="submit" disabled={!hydrated || pending} aria-busy={pending}>
         {t("forgotPassword.submit")}
       </Button>
       <Link href="/sign-in" className="text-sm underline underline-offset-4">

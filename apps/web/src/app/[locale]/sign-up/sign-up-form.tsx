@@ -9,6 +9,7 @@ import { Alert } from "@/components/ui/alert.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Link } from "@/i18n/navigation.ts";
 import { authClient } from "@/lib/auth-client.ts";
+import { useHydrated } from "@/lib/use-hydrated.ts";
 import { authErrorKey, type AuthErrorKey } from "@/lib/auth-errors.ts";
 
 type FieldErrors = Partial<Record<"name" | "email" | "password", AuthErrorKey>>;
@@ -19,6 +20,7 @@ export function SignUpForm() {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<AuthErrorKey | null>(null);
   const [pending, setPending] = useState(false);
+  const hydrated = useHydrated();
   const [done, setDone] = useState(false);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -74,7 +76,7 @@ export function SignUpForm() {
 
   const limits = { min: PASSWORD_MIN_LENGTH, max: PASSWORD_MAX_LENGTH };
   return (
-    <form noValidate onSubmit={onSubmit} className="flex flex-col gap-5">
+    <form method="post" noValidate onSubmit={onSubmit} className="flex flex-col gap-5">
       {formError ? <Alert tone="error">{t(`errors.${formError}`, limits)}</Alert> : null}
       <FormField
         id="name"
@@ -102,7 +104,7 @@ export function SignUpForm() {
         hint={t("fields.passwordHint", limits)}
         error={fieldErrors.password && t(`errors.${fieldErrors.password}`, limits)}
       />
-      <Button type="submit" disabled={pending} aria-busy={pending}>
+      <Button type="submit" disabled={!hydrated || pending} aria-busy={pending}>
         {t("signUp.submit")}
       </Button>
       <p className="text-sm text-muted-foreground">

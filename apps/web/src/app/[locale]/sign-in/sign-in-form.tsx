@@ -14,6 +14,7 @@ import { Alert } from "@/components/ui/alert.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Link, useRouter } from "@/i18n/navigation.ts";
 import { authClient } from "@/lib/auth-client.ts";
+import { useHydrated } from "@/lib/use-hydrated.ts";
 import { authErrorKey, type AuthErrorKey } from "@/lib/auth-errors.ts";
 
 type Notice = {
@@ -31,6 +32,7 @@ export function SignInForm({ linkInvalid }: { linkInvalid: boolean }) {
   );
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const hydrated = useHydrated();
   const callbackURL = `/${locale}/dashboard`;
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -88,7 +90,7 @@ export function SignInForm({ linkInvalid }: { linkInvalid: boolean }) {
       : t(`errors.${n.key}`, { min: PASSWORD_MIN_LENGTH, max: PASSWORD_MAX_LENGTH });
 
   return (
-    <form noValidate onSubmit={onSubmit} className="flex flex-col gap-5">
+    <form method="post" noValidate onSubmit={onSubmit} className="flex flex-col gap-5">
       {notice ? <Alert tone={notice.tone}>{noticeText(notice)}</Alert> : null}
       {unverifiedEmail ? (
         <Button variant="outline" onClick={resendVerification} disabled={pending}>
@@ -105,7 +107,7 @@ export function SignInForm({ linkInvalid }: { linkInvalid: boolean }) {
           required
         />
       ) : null}
-      <Button type="submit" disabled={pending} aria-busy={pending}>
+      <Button type="submit" disabled={!hydrated || pending} aria-busy={pending}>
         {mode === "password" ? t("signIn.submit") : t("signIn.magicLinkSubmit")}
       </Button>
       <Button

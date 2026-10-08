@@ -13,6 +13,7 @@ import { Alert } from "@/components/ui/alert.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Link } from "@/i18n/navigation.ts";
 import { authClient } from "@/lib/auth-client.ts";
+import { useHydrated } from "@/lib/use-hydrated.ts";
 import { authErrorKey, type AuthErrorKey } from "@/lib/auth-errors.ts";
 
 const limits = { min: PASSWORD_MIN_LENGTH, max: PASSWORD_MAX_LENGTH };
@@ -22,6 +23,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
   const [error, setError] = useState<AuthErrorKey | null>(null);
   const [done, setDone] = useState(false);
   const [pending, setPending] = useState(false);
+  const hydrated = useHydrated();
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -53,7 +55,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
   }
 
   return (
-    <form noValidate onSubmit={onSubmit} className="flex flex-col gap-5">
+    <form method="post" noValidate onSubmit={onSubmit} className="flex flex-col gap-5">
       {error ? <Alert tone="error">{t(`errors.${error}`, limits)}</Alert> : null}
       <FormField
         id="password"
@@ -65,7 +67,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
         maxLength={PASSWORD_MAX_LENGTH}
         hint={t("fields.passwordHint", limits)}
       />
-      <Button type="submit" disabled={pending} aria-busy={pending}>
+      <Button type="submit" disabled={!hydrated || pending} aria-busy={pending}>
         {t("resetPassword.submit")}
       </Button>
     </form>
