@@ -11,7 +11,7 @@
 - [x] Data model and ER diagram ([`DATA_MODEL.md`](DATA_MODEL.md))
 - [x] Milestones (this file)
 - [x] Initial ADRs (0001 to 0004; 0005 drafted for Phase 4b)
-- [ ] Maintainer answers the open questions in `ARCHITECTURE.md` §15
+- [x] Maintainer answers the open questions (recorded in `ARCHITECTURE.md` §15)
 
 ## Phase 1: Foundations
 
@@ -50,16 +50,20 @@ sign out on both locales; CI is green on the PR.
 Acceptance: an organizer publishes an event; a visitor registers, receives the QR by email
 and opens the ticket page; registration past capacity or deadline is rejected.
 
-## Phase 3: Closed list, CSV, invitations
+## Phase 3: Closed list, CSV, invitations, teams
 
 - Manual attendee creation and CSV import (preview, validation report per row,
-  de-duplication by email, size limits), bulk ticket emails through the outbox.
-- Closed-mode public form rejects non-invited emails (flow depends on open question 1).
+  de-duplication by email, size limits); invitees get their ticket email directly through
+  the outbox.
+- Public page of a closed event shows "by invitation only" and rejects registrations.
 - Staff invitations by email; accept flow; staff list management.
+- Teams: create organizations, organization switcher, invite co-organizers by email with a
+  role (owner, admin, member), members page, leave/remove member.
 - Attendee list with filters, resend ticket.
 
 Acceptance: importing a 1,000-row CSV queues 1,000 emails without blocking the request;
-invalid rows are reported; an uninvited registration is rejected.
+invalid rows are reported; an uninvited registration is rejected; an invited co-organizer
+can manage the organization's events, and a user from another organization cannot see them.
 
 ## Phase 4a: Scanner and check-in (online) + dashboard
 
@@ -97,5 +101,5 @@ then reconnecting: one check-in (earliest `scannedAt`), one reported duplicate.
 ## Later (v2 candidates, not in MVP)
 
 Payments, ticket sales, multiple ticket types, wallet passes, re-entry tracking,
-organization/team management UI, SSE live dashboard, native Expo app, Postgres RLS,
+SSE live dashboard, native Expo app, Postgres RLS,
 hosted offering and billing.

@@ -25,7 +25,7 @@ invitations, audit_log`. Proposed adjustments:
 | Merge "attendees/registrations" into `attendees` | One row per person per event regardless of how they arrived (`source` column). |
 | Add `tickets` | Separates the person from their QR credential: reissue/revoke without touching the attendee; keeps history. |
 | Add `event_signing_keys` | Per-event Ed25519 keys with versions, rotation and revocation. |
-| Split "invitations" into `staff_invitations` (and Better Auth's org invitations) | Closed-list attendees get their ticket directly (if open question 1 is confirmed), so attendee "invitation" is just an `attendees` row with `source = import/manual` plus an email. |
+| Split "invitations" into `staff_invitations` (and Better Auth's org invitations) | Closed-list attendees get their ticket directly (confirmed in Phase 0), so attendee "invitation" is just an `attendees` row with `source = import/manual` plus an email. |
 | Add `check_in_attempts` | Every scan outcome (invalid, wrong event, duplicates from offline sync): audit trail and dashboard reporting without polluting `check_ins`. |
 | Add `email_outbox` | Reliable, retryable email delivery in the same transaction as the business change. |
 

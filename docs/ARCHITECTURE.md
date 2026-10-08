@@ -130,8 +130,9 @@ Main resources (indicative, finalized per phase):
   later. Sessions are HTTP-only, `Secure`, `SameSite=Lax` cookies on the web; bearer tokens
   for the future Expo app.
 - **Organization plugin** of Better Auth provides `organizations`, `organization_members` and
-  `organization_invitations`. On sign-up every user gets a personal organization; the MVP UI
-  does not expose organization management (see open questions).
+  `organization_invitations`. On sign-up every user gets a personal organization (named
+  after them, editable). Users can create more organizations, switch the active one
+  (`sessions.active_organization_id`) and invite co-organizers by email.
 - **Attendees have no account.** They reach their ticket through a secret link
   (`/t/<accessToken>`, 256-bit random, stored hashed).
 - **Staff are users** (sign up or magic link) assigned per event through `event_staff`.
@@ -140,7 +141,9 @@ Authorization lives in the API service layer, never in the UI:
 
 | Role | Scope | Can |
 |---|---|---|
-| Organization owner/admin ("organizer") | events of their organization | everything on those events |
+| Organization owner | their organization | everything, including deleting the organization and transferring ownership |
+| Organization admin | their organization | manage members and invitations; everything on the organization's events |
+| Organization member ("organizer") | events of their organization | create, edit, publish and purge events; attendees, staff, dashboard |
 | Staff | events in `event_staff` for that user | scan, manual check-in, attendee search (minimal fields) |
 | Attendee | their own ticket via secret link | view/download ticket |
 
@@ -254,19 +257,23 @@ which are compatible with AGPL-3.0.
 
 Node.js 24 LTS, pnpm 10, PostgreSQL 18 (native `uuidv7()`), TypeScript 5.x strict.
 
-## 15. Open questions (need maintainer input before Phase 1)
+## 15. Phase 0 decisions
 
-1. **Closed list flow.** Should invitees receive their QR directly by email (no extra step),
-   or receive an invitation link to complete a registration form first, after which they get
-   the QR? Proposal: direct QR; the public form of a closed event rejects non-invited emails.
-2. ~~**Attendee accounts.**~~ **Decided:** no attendee accounts in the MVP; tickets are
-   reached by secret link and can be re-sent by email.
-3. ~~**Re-entry.**~~ **Decided:** single entry per attendee in the MVP (a second scan is
-   `ALREADY_USED`). Exit/re-entry tracking is a v2 candidate.
-4. ~~**Names offline.**~~ **Decided:** the offline bundle stores only a display name (first
-   name + last initial); full data stays on the server.
-5. **Organizations in the MVP UI.** Proposal: model and API support them, the UI only uses
-   the personal organization. Team management arrives with the hosted offering.
-6. **Deployment shape.** Proposal: single origin via Next.js rewrites (`/api/*` → API
-   container), so the web app never needs CORS and Compose keeps the four services from the
-   brief. Production deployments may use any reverse proxy with the same routing.
+Answered by the maintainer during the Phase 0 review:
+
+1. **Both registration modes are in the MVP.** Closed list: invitees receive their QR
+   directly by email (no extra form). The public page of a closed event shows the event
+   details and states that registration is by invitation only; registration attempts are
+   rejected.
+2. **No attendee accounts** in the MVP. Tickets are reached by secret link and can be
+   re-sent by email.
+3. **Single entry** per attendee in the MVP (a second scan is `ALREADY_USED`). Exit and
+   re-entry tracking is a v2 candidate.
+4. **Offline names:** the offline bundle stores only a display name (first name + last
+   initial); full data stays on the server.
+5. **Basic teams are in the MVP.** A user can belong to several organizations, switch
+   between them, and invite co-organizers by email with a role (see §5). Billing stays out.
+6. **Deployment shape (proposed, accepted with this PR):** single origin via Next.js
+   rewrites (`/api/*` → API container), so the web app never needs CORS and Compose keeps
+   the four services from the brief. Production deployments may use any reverse proxy with
+   the same routing.
