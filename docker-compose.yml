@@ -1,0 +1,71 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Local stack: `docker compose up --build`, then open http://localhost:3000 (emails: http://localhost:8025).
+# Defaults are development-only values; override them with a .env file (see .env.example).
+name: pasalista
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: pasalista
+      POSTGRES_PASSWORD: pasalista
+      POSTGRES_DB: pasalista
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pasalista -d pasalista"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mailpit:
+    image: axllent/mailpit:v1.31.4
+    ports:
+      - "127.0.0.1:8025:8025" # web UI
+      - "127.0.0.1:1025:1025" # SMTP
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DATABASE_URL: postgres://pasalista:pasalista@postgres:5432/pasalista
+      PUBLIC_URL: ${PUBLIC_URL:-http://localhost:3000}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-dev-only-insecure-secret-change-me-0000000000}
+      # No appending proxy locally (Next.js forwards X-Forwarded-For unchanged). Set to 1 behind
+      # a reverse proxy such as nginx or Caddy in production.
+      TRUSTED_PROXY_HOPS: ${TRUSTED_PROXY_HOPS:-0}
+      SMTP_HOST: ${SMTP_HOST:-mailpit}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      EMAIL_FROM: ${EMAIL_FROM:-PasaLista <no-reply@pasalista.localhost>}
+    ports:
+      - "127.0.0.1:3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+      args:
+        API_INTERNAL_URL: http://api:3001
+    environment:
+      API_INTERNAL_URL: http://api:3001
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  pgdata:
