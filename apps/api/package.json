@@ -1,0 +1,37 @@
+{
+  "name": "@pasalista/api",
+  "version": "0.1.0",
+  "private": true,
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch --env-file-if-exists=../../.env src/index.ts",
+    "start": "node src/index.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "openapi:generate": "node src/scripts/generate-openapi.ts",
+    "db:seed": "node --env-file-if-exists=../../.env src/scripts/seed.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.4",
+    "@hono/zod-openapi": "^1.6.3",
+    "@pasalista/core": "workspace:*",
+    "@pasalista/db": "workspace:*",
+    "@pasalista/i18n": "workspace:*",
+    "better-auth": "^1.7.7",
+    "drizzle-orm": "^0.45.4",
+    "hono": "^4.13.13",
+    "nodemailer": "^10.0.16",
+    "pino": "^10.4.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@pasalista/config": "workspace:*",
+    "@types/node": "^24.0.0",
+    "@types/nodemailer": "^8.0.2",
+    "@types/pg": "^8.23.1",
+    "pg": "^8.23.1",
+    "typescript": "~6.0.3",
+    "vitest": "^5.0.3"
+  }
+}

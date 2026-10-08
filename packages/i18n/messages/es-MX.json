@@ -1,0 +1,111 @@
+{
+  "common": {
+    "appName": "PasaLista",
+    "tagline": "Valida la asistencia a tus eventos con códigos QR firmados.",
+    "language": "Idioma",
+    "languages": {
+      "es-MX": "Español (México)",
+      "en": "English"
+    },
+    "theme": {
+      "label": "Tema",
+      "light": "Claro",
+      "dark": "Oscuro",
+      "system": "Sistema"
+    },
+    "loading": "Cargando…",
+    "skipToContent": "Saltar al contenido"
+  },
+  "nav": {
+    "signIn": "Iniciar sesión",
+    "signUp": "Crear cuenta",
+    "signOut": "Cerrar sesión",
+    "dashboard": "Panel"
+  },
+  "home": {
+    "title": "Pasa lista sin papel",
+    "subtitle": "Crea un evento, registra a tus asistentes y valida su entrada con el celular, incluso sin internet.",
+    "getStarted": "Comenzar",
+    "haveAccount": "Ya tengo cuenta",
+    "goToDashboard": "Ir a mi panel"
+  },
+  "auth": {
+    "fields": {
+      "name": "Nombre",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "newPassword": "Nueva contraseña",
+      "passwordHint": "Mínimo {min} caracteres. Una frase larga es más segura que una contraseña complicada."
+    },
+    "signUp": {
+      "title": "Crea tu cuenta",
+      "submit": "Crear cuenta",
+      "haveAccount": "¿Ya tienes cuenta?",
+      "checkInboxTitle": "Revisa tu correo",
+      "checkInbox": "Si el correo es válido, te enviamos un enlace para verificar tu cuenta. Ábrelo para continuar."
+    },
+    "signIn": {
+      "title": "Inicia sesión",
+      "submit": "Iniciar sesión",
+      "noAccount": "¿No tienes cuenta?",
+      "forgotPassword": "¿Olvidaste tu contraseña?",
+      "useMagicLink": "Prefiero recibir un enlace por correo",
+      "usePassword": "Prefiero usar mi contraseña",
+      "magicLinkSubmit": "Enviar enlace",
+      "magicLinkSent": "Si existe una cuenta con ese correo, te enviamos un enlace para iniciar sesión.",
+      "resendVerification": "Reenviar correo de verificación",
+      "verificationResent": "Si la cuenta existe y no está verificada, te enviamos un nuevo enlace."
+    },
+    "forgotPassword": {
+      "title": "Recupera tu contraseña",
+      "description": "Escribe tu correo y te enviaremos un enlace para crear una nueva contraseña.",
+      "submit": "Enviar enlace",
+      "sent": "Si existe una cuenta con ese correo, te enviamos un enlace para restablecer tu contraseña.",
+      "backToSignIn": "Volver a iniciar sesión"
+    },
+    "resetPassword": {
+      "title": "Crea una nueva contraseña",
+      "submit": "Guardar contraseña",
+      "success": "Tu contraseña se actualizó. Ya puedes iniciar sesión.",
+      "missingToken": "El enlace no es válido. Solicita uno nuevo."
+    },
+    "errors": {
+      "invalidCredentials": "Correo o contraseña incorrectos.",
+      "emailNotVerified": "Tu correo aún no está verificado.",
+      "invalidEmail": "Escribe un correo válido.",
+      "passwordTooShort": "La contraseña debe tener al menos {min} caracteres.",
+      "passwordTooLong": "La contraseña debe tener como máximo {max} caracteres.",
+      "nameRequired": "Escribe tu nombre.",
+      "linkInvalid": "El enlace no es válido o ya expiró. Solicita uno nuevo.",
+      "rateLimited": "Demasiados intentos. Espera un momento e inténtalo de nuevo.",
+      "generic": "Algo salió mal. Inténtalo de nuevo."
+    }
+  },
+  "dashboard": {
+    "title": "Panel",
+    "greeting": "Hola, {name}",
+    "organization": "Organización: {name}",
+    "emptyEvents": "Aquí aparecerán tus eventos."
+  },
+  "emails": {
+    "footer": "Recibiste este correo porque alguien usó esta dirección en PasaLista. Si no fuiste tú, ignóralo.",
+    "verifyEmail": {
+      "subject": "Verifica tu correo en PasaLista",
+      "greeting": "Hola, {name}:",
+      "body": "Confirma tu correo para activar tu cuenta.",
+      "cta": "Verificar correo"
+    },
+    "resetPassword": {
+      "subject": "Restablece tu contraseña de PasaLista",
+      "greeting": "Hola, {name}:",
+      "body": "Recibimos una solicitud para restablecer tu contraseña. El enlace expira en 1 hora.",
+      "cta": "Crear nueva contraseña"
+    },
+    "magicLink": {
+      "subject": "Tu enlace para entrar a PasaLista",
+      "greeting": "Hola:",
+      "body": "Usa este enlace para iniciar sesión. Expira en 5 minutos y solo funciona una vez.",
+      "cta": "Iniciar sesión"
+    }
+  }
+}
