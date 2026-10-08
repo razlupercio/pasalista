@@ -1,0 +1,12 @@
+pnpm-lock.yaml
+node_modules
+.next
+.turbo
+dist
+coverage
+playwright-report
+test-results
+packages/db/migrations
+packages/api-client/src/schema.d.ts
+apps/api/openapi.json
+LICENSE
