@@ -1,0 +1,7 @@
+{
+  "extends": "@pasalista/config/tsconfig.base.json",
+  "compilerOptions": {
+    "types": []
+  },
+  "include": ["src", "messages/*.json"]
+}

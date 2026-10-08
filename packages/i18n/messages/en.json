@@ -1,0 +1,111 @@
+{
+  "common": {
+    "appName": "PasaLista",
+    "tagline": "Validate event attendance with signed QR codes.",
+    "language": "Language",
+    "languages": {
+      "es-MX": "Español (México)",
+      "en": "English"
+    },
+    "theme": {
+      "label": "Theme",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
+    "loading": "Loading…",
+    "skipToContent": "Skip to content"
+  },
+  "nav": {
+    "signIn": "Sign in",
+    "signUp": "Create account",
+    "signOut": "Sign out",
+    "dashboard": "Dashboard"
+  },
+  "home": {
+    "title": "Take attendance without paper",
+    "subtitle": "Create an event, register your attendees and check them in from your phone, even offline.",
+    "getStarted": "Get started",
+    "haveAccount": "I already have an account",
+    "goToDashboard": "Go to my dashboard"
+  },
+  "auth": {
+    "fields": {
+      "name": "Name",
+      "email": "Email",
+      "password": "Password",
+      "newPassword": "New password",
+      "passwordHint": "At least {min} characters. A long passphrase is safer than a complicated password."
+    },
+    "signUp": {
+      "title": "Create your account",
+      "submit": "Create account",
+      "haveAccount": "Already have an account?",
+      "checkInboxTitle": "Check your inbox",
+      "checkInbox": "If the email is valid, we sent you a link to verify your account. Open it to continue."
+    },
+    "signIn": {
+      "title": "Sign in",
+      "submit": "Sign in",
+      "noAccount": "Don't have an account?",
+      "forgotPassword": "Forgot your password?",
+      "useMagicLink": "Email me a sign-in link instead",
+      "usePassword": "Use my password instead",
+      "magicLinkSubmit": "Send link",
+      "magicLinkSent": "If an account exists for that email, we sent you a sign-in link.",
+      "resendVerification": "Resend verification email",
+      "verificationResent": "If the account exists and is not verified, we sent you a new link."
+    },
+    "forgotPassword": {
+      "title": "Recover your password",
+      "description": "Enter your email and we will send you a link to create a new password.",
+      "submit": "Send link",
+      "sent": "If an account exists for that email, we sent you a password reset link.",
+      "backToSignIn": "Back to sign in"
+    },
+    "resetPassword": {
+      "title": "Create a new password",
+      "submit": "Save password",
+      "success": "Your password was updated. You can sign in now.",
+      "missingToken": "This link is not valid. Request a new one."
+    },
+    "errors": {
+      "invalidCredentials": "Incorrect email or password.",
+      "emailNotVerified": "Your email is not verified yet.",
+      "invalidEmail": "Enter a valid email.",
+      "passwordTooShort": "The password must be at least {min} characters.",
+      "passwordTooLong": "The password must be at most {max} characters.",
+      "nameRequired": "Enter your name.",
+      "linkInvalid": "This link is not valid or has expired. Request a new one.",
+      "rateLimited": "Too many attempts. Wait a moment and try again.",
+      "generic": "Something went wrong. Please try again."
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "greeting": "Hi, {name}",
+    "organization": "Organization: {name}",
+    "emptyEvents": "Your events will appear here."
+  },
+  "emails": {
+    "footer": "You received this email because someone used this address on PasaLista. If it wasn't you, ignore it.",
+    "verifyEmail": {
+      "subject": "Verify your email on PasaLista",
+      "greeting": "Hi {name},",
+      "body": "Confirm your email to activate your account.",
+      "cta": "Verify email"
+    },
+    "resetPassword": {
+      "subject": "Reset your PasaLista password",
+      "greeting": "Hi {name},",
+      "body": "We received a request to reset your password. The link expires in 1 hour.",
+      "cta": "Create a new password"
+    },
+    "magicLink": {
+      "subject": "Your PasaLista sign-in link",
+      "greeting": "Hi,",
+      "body": "Use this link to sign in. It expires in 5 minutes and works only once.",
+      "cta": "Sign in"
+    }
+  }
+}
