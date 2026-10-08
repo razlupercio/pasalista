@@ -29,10 +29,13 @@ start of every session and treat it as the source of truth.
 Update this section as soon as they exist; do not invent commands that are not listed here.
 
 - `pnpm install`: install dependencies
-- `pnpm dev`: development
-- `pnpm lint` / `pnpm typecheck` / `pnpm test` / `pnpm test:e2e`
-- `pnpm db:generate` / `pnpm db:migrate`
-- `docker compose up`: start the whole stack
+- `pnpm dev`: development (API :3001, web :3000; needs `docker compose up -d postgres mailpit`)
+- `pnpm lint` (ESLint + SPDX check) / `pnpm typecheck` / `pnpm test` / `pnpm test:e2e`
+- `pnpm format` / `pnpm format:check`: Prettier
+- `pnpm db:generate` / `pnpm db:migrate` / `pnpm db:seed` (demo organizer, dev only)
+- `pnpm openapi:generate`: regenerate `apps/api/openapi.json` and `packages/api-client`
+- `docker compose up --build`: start the whole stack (web :3000, Mailpit :8025)
+- E2E: `TRUSTED_PROXY_HOPS=1 docker compose up --build`, then `pnpm test:e2e`
 
 ## Workflow
 
