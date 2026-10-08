@@ -22,8 +22,10 @@ const envSchema = z
     PUBLIC_URL: z.url().transform((url) => url.replace(/\/+$/, "")),
     BETTER_AUTH_SECRET: z.string().min(32),
     /**
-     * Number of reverse proxies we control in front of the API (the Next.js rewrite counts as
-     * one). 0 ignores `X-Forwarded-For`. Too high a value lets clients spoof their IP.
+     * Number of reverse proxies we control that append the client address to
+     * `X-Forwarded-For` (e.g. nginx, Caddy, Traefik). The Next.js rewrite does NOT count: it
+     * forwards a client-supplied header unchanged. 0 ignores the header; too high a value lets
+     * clients spoof their IP and dodge rate limits.
      */
     TRUSTED_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(0),
     RATE_LIMIT_ENABLED: booleanString.default(true),
@@ -52,7 +54,6 @@ const developmentDefaults: Record<string, string> = {
   DATABASE_URL: DEFAULT_DEV_DATABASE_URL,
   PUBLIC_URL: "http://localhost:3000",
   BETTER_AUTH_SECRET: DEV_AUTH_SECRET,
-  TRUSTED_PROXY_HOPS: "1",
   SMTP_HOST: "localhost",
   SMTP_PORT: "1025",
   EMAIL_FROM: "PasaLista <no-reply@pasalista.localhost>",

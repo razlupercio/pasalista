@@ -17,7 +17,7 @@ describe("loadEnv", () => {
     const env = loadEnv({});
     expect(env.NODE_ENV).toBe("development");
     expect(env.PUBLIC_URL).toBe("http://localhost:3000");
-    expect(env.TRUSTED_PROXY_HOPS).toBe(1);
+    expect(env.TRUSTED_PROXY_HOPS).toBe(0);
   });
 
   it("requires every variable in production and normalizes the public URL", () => {
