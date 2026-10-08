@@ -259,13 +259,12 @@ Node.js 24 LTS, pnpm 10, PostgreSQL 18 (native `uuidv7()`), TypeScript 5.x stric
 1. **Closed list flow.** Should invitees receive their QR directly by email (no extra step),
    or receive an invitation link to complete a registration form first, after which they get
    the QR? Proposal: direct QR; the public form of a closed event rejects non-invited emails.
-2. **Attendee accounts.** Proposal: none in the MVP; tickets are reached by secret link and
-   can be re-sent by email.
-3. **Re-entry.** Proposal: single entry per attendee in the MVP (a second scan is
+2. ~~**Attendee accounts.**~~ **Decided:** no attendee accounts in the MVP; tickets are
+   reached by secret link and can be re-sent by email.
+3. ~~**Re-entry.**~~ **Decided:** single entry per attendee in the MVP (a second scan is
    `ALREADY_USED`). Exit/re-entry tracking is a v2 candidate.
-4. **Names offline.** Showing "VALID (name)" offline requires storing names on the scanner
-   device. Proposal: store a display name (first name + last initial) only; full data stays
-   on the server.
+4. ~~**Names offline.**~~ **Decided:** the offline bundle stores only a display name (first
+   name + last initial); full data stays on the server.
 5. **Organizations in the MVP UI.** Proposal: model and API support them, the UI only uses
    the personal organization. Team management arrives with the hosted offering.
 6. **Deployment shape.** Proposal: single origin via Next.js rewrites (`/api/*` → API

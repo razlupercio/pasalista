@@ -13,7 +13,8 @@ deterministically and reported.
 
 - Before the event, the scanner downloads an **offline bundle** for its event: public keys
   by version, revoked key versions, a minimal attendee list
-  `{attendeeId, activeNonce, displayName?}`, revoked tickets and attendees already checked
+  `{attendeeId, activeNonce, displayName}` (display name = first name + last initial,
+  confirmed by the maintainer), revoked tickets and attendees already checked
   in. It is stored in IndexedDB and cleared when the event closes or staff access is removed.
 - Offline scan: verify with `packages/core` (ADR-0002) against the bundle; if valid and not
   checked in locally, record it and enqueue
@@ -31,5 +32,4 @@ deterministically and reported.
 
 ## Open points for Phase 4b
 
-- Whether `displayName` is stored offline (privacy vs. "VALID (name)" UX).
 - Bundle refresh strategy when connectivity is intermittent during the event.
