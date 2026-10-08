@@ -46,6 +46,9 @@ sign out on both locales; CI is green on the PR.
 - Ticket issuance, "my ticket" page `/t/[token]` (QR, downloadable PNG, add to home screen),
   ticket email through the outbox worker.
 - Reissue/revoke ticket.
+- Decided during Phase 2 (ADR-0007): extra fields are text, select and checkbox (max 10);
+  duplicate emails get an explicit error; published events stay editable without notifying
+  attendees; attendees can cancel their own registration from the ticket page.
 
 Acceptance: an organizer publishes an event; a visitor registers, receives the QR by email
 and opens the ticket page; registration past capacity or deadline is rejected.
