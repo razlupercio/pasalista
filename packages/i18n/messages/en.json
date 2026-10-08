@@ -14,7 +14,13 @@
       "system": "System"
     },
     "loading": "Loading…",
-    "skipToContent": "Skip to content"
+    "skipToContent": "Skip to content",
+    "optional": "(optional)",
+    "save": "Save",
+    "cancel": "Cancel",
+    "back": "Back",
+    "yes": "Yes",
+    "no": "No"
   },
   "nav": {
     "signIn": "Sign in",
@@ -85,7 +91,148 @@
     "title": "Dashboard",
     "greeting": "Hi, {name}",
     "organization": "Organization: {name}",
-    "emptyEvents": "Your events will appear here."
+    "eventsTitle": "Your events",
+    "emptyEvents": "You have no events yet. Create your first one to start registering attendees.",
+    "newEvent": "Create event"
+  },
+  "events": {
+    "status": {
+      "draft": "Draft",
+      "published": "Published",
+      "closed": "Closed"
+    },
+    "registeredCount": "{count, plural, =0 {No registrations} one {# registered} other {# registered}}",
+    "registeredOfCapacity": "{count} of {capacity} spots",
+    "form": {
+      "createTitle": "New event",
+      "editTitle": "Edit event",
+      "name": "Event name",
+      "description": "Description",
+      "startsAt": "Starts",
+      "endsAt": "Ends",
+      "timezone": "Time zone",
+      "venueName": "Venue",
+      "venueAddress": "Address",
+      "capacity": "Capacity",
+      "capacityHint": "Leave empty for no limit.",
+      "registrationMode": "Registration",
+      "modeOpen": "Open",
+      "modeOpenHint": "Anyone with the link can register.",
+      "modeClosed": "Closed list",
+      "modeClosedHint": "Only people you invite get a ticket (guest list upload arrives in the next phase).",
+      "registrationDeadline": "Registration deadline",
+      "fieldsTitle": "Additional questions",
+      "fieldsHint": "Besides name and email. Up to {max} questions.",
+      "addField": "Add question",
+      "fieldLabel": "Question",
+      "fieldType": "Answer type",
+      "fieldTypes": {
+        "text": "Text",
+        "select": "Choice from a list",
+        "checkbox": "Checkbox (yes/no)"
+      },
+      "fieldRequired": "Required",
+      "fieldOptions": "Options",
+      "fieldOptionsHint": "One option per line.",
+      "removeField": "Remove question {number}",
+      "create": "Create draft",
+      "save": "Save changes",
+      "saved": "Changes saved.",
+      "invalid": "Check the highlighted fields.",
+      "required": "This field is required.",
+      "endsBeforeStart": "The end must be after the start.",
+      "deadlineAfterEnd": "The deadline cannot be after the event ends.",
+      "capacityInvalid": "Enter a whole number greater than zero.",
+      "optionsRequired": "Add at least one option."
+    },
+    "detail": {
+      "when": "When",
+      "where": "Where",
+      "publicLink": "Public registration link",
+      "copyLink": "Copy link",
+      "copied": "Link copied.",
+      "draftHint": "This event is a draft: nobody can see it until you publish it.",
+      "publish": "Publish",
+      "close": "Close registration",
+      "reopen": "Publish again",
+      "edit": "Edit",
+      "delete": "Delete draft",
+      "deleteConfirm": "Delete this draft? This cannot be undone.",
+      "security": "Security",
+      "rotateKey": "Rotate signing key",
+      "rotateKeyHint": "New tickets are signed with a new key. Tickets already issued stay valid.",
+      "rotateKeyDone": "Active signing key: version {version}."
+    },
+    "attendees": {
+      "title": "Attendees",
+      "empty": "No registrations yet.",
+      "name": "Name",
+      "email": "Email",
+      "status": "Registration",
+      "ticket": "Ticket",
+      "actions": "Actions",
+      "statuses": {
+        "active": "Active",
+        "cancelled": "Cancelled"
+      },
+      "ticketStatuses": {
+        "active": "Valid",
+        "superseded": "Replaced",
+        "revoked": "Revoked",
+        "none": "No ticket"
+      },
+      "reissue": "Send new ticket",
+      "reissueConfirm": "A new QR code and link will be generated and emailed. The previous QR will stop working.",
+      "revoke": "Revoke QR",
+      "revokeConfirm": "The current QR will no longer be valid. You can send a new one later.",
+      "cancel": "Cancel registration",
+      "cancelConfirm": "The registration will be cancelled and its QR will no longer be valid.",
+      "done": "Done."
+    }
+  },
+  "publicEvent": {
+    "organizedBy": "Organized by {name}",
+    "when": "When",
+    "where": "Where",
+    "registerTitle": "Register",
+    "deadline": "Registration open until {date}.",
+    "submit": "Register",
+    "successTitle": "You're registered!",
+    "successBody": "We emailed you your ticket with the QR code.",
+    "states": {
+      "invitation_only": "Registration for this event is by invitation only.",
+      "deadline_passed": "The registration deadline has passed.",
+      "full": "This event has no spots left.",
+      "closed": "Registration for this event is closed."
+    },
+    "required": "This field is required.",
+    "invalidOption": "Choose an option from the list.",
+    "selectPlaceholder": "Choose an option"
+  },
+  "ticket": {
+    "title": "Your ticket",
+    "holder": "Ticket for {name}",
+    "showAtEntrance": "Show this QR code at the entrance.",
+    "qrAlt": "QR code of your ticket for {eventName}",
+    "download": "Download QR",
+    "addToHome": "Tip: add this page to your home screen from your browser menu so it is at hand on the day of the event.",
+    "cancel": "Cancel my registration",
+    "cancelConfirm": "Are you sure you want to cancel your registration? Your QR will no longer be valid.",
+    "cancelled": "Your registration is cancelled. If you change your mind, you can register again from the event page.",
+    "invalid": "This ticket is no longer valid. If you think this is a mistake, contact the event organizer.",
+    "eventPage": "View event page"
+  },
+  "apiErrors": {
+    "validation_failed": "Check the data and try again.",
+    "not_found": "We couldn't find what you are looking for.",
+    "unauthorized": "Your session ended. Please sign in again.",
+    "forbidden": "You are not allowed to do this.",
+    "already_registered": "This email is already registered for the event.",
+    "event_full": "This event has no spots left.",
+    "registration_closed": "Registration for this event is closed.",
+    "invalid_state": "This action is not available in the current state.",
+    "rate_limited": "Too many attempts. Wait a moment and try again.",
+    "generic": "Something went wrong. Please try again."
   },
   "emails": {
     "footer": "You received this email because someone used this address on PasaLista. If it wasn't you, ignore it.",
@@ -106,6 +253,16 @@
       "greeting": "Hi,",
       "body": "Use this link to sign in. It expires in 5 minutes and works only once.",
       "cta": "Sign in"
+    },
+    "ticket": {
+      "subject": "Your ticket for {eventName}",
+      "greeting": "Hi {name},",
+      "body": "Your registration for {eventName} is confirmed.",
+      "whenLabel": "When",
+      "whereLabel": "Where",
+      "qrHint": "Show this QR code at the entrance. You can also open your ticket from the link.",
+      "qrAlt": "QR code of your ticket",
+      "cta": "View my ticket"
     }
   }
 }
