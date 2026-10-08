@@ -47,9 +47,15 @@ export function renderEmail(kind: EmailKind, locale: string, rawPayload: unknown
   const values = { name: (payload as { name?: string }).name ?? "" };
 
   const greeting = format(strings.greeting, values);
-  const text = [greeting, "", strings.body, "", `${strings.cta}: ${payload.url}`, "", catalog.footer].join(
-    "\n",
-  );
+  const text = [
+    greeting,
+    "",
+    strings.body,
+    "",
+    `${strings.cta}: ${payload.url}`,
+    "",
+    catalog.footer,
+  ].join("\n");
   const html = `<!doctype html>
 <html lang="${escapeHtml(locale)}">
   <body style="font-family: system-ui, sans-serif; line-height: 1.5; color: #111;">

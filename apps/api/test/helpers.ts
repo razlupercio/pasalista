@@ -87,6 +87,8 @@ export async function signUp(ctx: TestContext, email: string, locale = "es-MX") 
 export async function signUpAndVerify(ctx: TestContext, email: string): Promise<string> {
   await signUp(ctx, email);
   const mail = await latestEmail(ctx, email);
-  const response = await ctx.app.request(pathOf(mail?.payload.url), { headers: { "x-forwarded-for": randomIp() } });
+  const response = await ctx.app.request(pathOf(mail?.payload.url), {
+    headers: { "x-forwarded-for": randomIp() },
+  });
   return cookiesFrom(response);
 }

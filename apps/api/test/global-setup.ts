@@ -13,7 +13,9 @@ export default async function setup(): Promise<void> {
   const client = new pg.Client({ connectionString: admin.toString() });
   await client.connect();
   try {
-    const { rowCount } = await client.query("select 1 from pg_database where datname = $1", [databaseName]);
+    const { rowCount } = await client.query("select 1 from pg_database where datname = $1", [
+      databaseName,
+    ]);
     if (!rowCount) {
       // Identifiers cannot be bound as parameters; escapeIdentifier quotes them safely.
       await client.query(`create database ${client.escapeIdentifier(databaseName)}`);

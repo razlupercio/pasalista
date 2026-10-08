@@ -21,7 +21,12 @@ export class ApiError extends Error {
   readonly code: ErrorCode;
   readonly issues: Problem["issues"];
 
-  constructor(status: ContentfulStatusCode, code: ErrorCode, detail?: string, issues?: Problem["issues"]) {
+  constructor(
+    status: ContentfulStatusCode,
+    code: ErrorCode,
+    detail?: string,
+    issues?: Problem["issues"],
+  ) {
     super(detail ?? titles[code]);
     this.name = "ApiError";
     this.status = status;

@@ -28,7 +28,9 @@ describe("loadEnv", () => {
   });
 
   it("refuses the development secret in production", () => {
-    expect(() => loadEnv({ ...production, BETTER_AUTH_SECRET: DEV_AUTH_SECRET })).toThrow(/BETTER_AUTH_SECRET/);
+    expect(() => loadEnv({ ...production, BETTER_AUTH_SECRET: DEV_AUTH_SECRET })).toThrow(
+      /BETTER_AUTH_SECRET/,
+    );
   });
 
   it("never echoes secret values in errors", () => {

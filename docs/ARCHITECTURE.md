@@ -111,18 +111,18 @@ packages/core ──► (nothing internal; only Zod and @noble/curves)
 
 Main resources (indicative, finalized per phase):
 
-| Resource | Endpoints | Who |
-|---|---|---|
-| Auth | `/v1/auth/*` (Better Auth) | public, rate limited |
-| Events | `GET/POST /v1/events`, `GET/PATCH/DELETE /v1/events/:id`, `POST /v1/events/:id/publish` | organizer |
-| Public event | `GET /v1/public/events/:slug`, `POST /v1/public/events/:slug/registrations` | public, rate limited |
-| Attendees | `GET/POST /v1/events/:id/attendees`, `POST /v1/events/:id/attendees/import` (CSV) | organizer |
-| Tickets | `POST /v1/attendees/:id/ticket/reissue`, `POST /v1/attendees/:id/ticket/revoke` | organizer |
-| My ticket | `GET /v1/public/tickets/:accessToken` | attendee (secret link), rate limited |
-| Staff | `GET/POST/DELETE /v1/events/:id/staff`, `POST /v1/staff-invitations/:token/accept` | organizer / invitee |
-| Check-in | `POST /v1/events/:id/check-ins` (QR or manual), `GET /v1/events/:id/attendees/search` | staff, organizer |
-| Offline | `GET /v1/events/:id/offline-bundle`, `POST /v1/events/:id/check-ins/sync` | staff (Phase 4b) |
-| Dashboard | `GET /v1/events/:id/stats`, `GET /v1/events/:id/export.csv` | organizer |
+| Resource     | Endpoints                                                                               | Who                                  |
+| ------------ | --------------------------------------------------------------------------------------- | ------------------------------------ |
+| Auth         | `/v1/auth/*` (Better Auth)                                                              | public, rate limited                 |
+| Events       | `GET/POST /v1/events`, `GET/PATCH/DELETE /v1/events/:id`, `POST /v1/events/:id/publish` | organizer                            |
+| Public event | `GET /v1/public/events/:slug`, `POST /v1/public/events/:slug/registrations`             | public, rate limited                 |
+| Attendees    | `GET/POST /v1/events/:id/attendees`, `POST /v1/events/:id/attendees/import` (CSV)       | organizer                            |
+| Tickets      | `POST /v1/attendees/:id/ticket/reissue`, `POST /v1/attendees/:id/ticket/revoke`         | organizer                            |
+| My ticket    | `GET /v1/public/tickets/:accessToken`                                                   | attendee (secret link), rate limited |
+| Staff        | `GET/POST/DELETE /v1/events/:id/staff`, `POST /v1/staff-invitations/:token/accept`      | organizer / invitee                  |
+| Check-in     | `POST /v1/events/:id/check-ins` (QR or manual), `GET /v1/events/:id/attendees/search`   | staff, organizer                     |
+| Offline      | `GET /v1/events/:id/offline-bundle`, `POST /v1/events/:id/check-ins/sync`               | staff (Phase 4b)                     |
+| Dashboard    | `GET /v1/events/:id/stats`, `GET /v1/events/:id/export.csv`                             | organizer                            |
 
 ## 5. Authentication and authorization
 
@@ -139,13 +139,13 @@ Main resources (indicative, finalized per phase):
 
 Authorization lives in the API service layer, never in the UI:
 
-| Role | Scope | Can |
-|---|---|---|
-| Organization owner | their organization | everything, including deleting the organization and transferring ownership |
-| Organization admin | their organization | manage members and invitations; everything on the organization's events |
-| Organization member ("organizer") | events of their organization | create, edit, publish and purge events; attendees, staff, dashboard |
-| Staff | events in `event_staff` for that user | scan, manual check-in, attendee search (minimal fields) |
-| Attendee | their own ticket via secret link | view/download ticket |
+| Role                              | Scope                                 | Can                                                                        |
+| --------------------------------- | ------------------------------------- | -------------------------------------------------------------------------- |
+| Organization owner                | their organization                    | everything, including deleting the organization and transferring ownership |
+| Organization admin                | their organization                    | manage members and invitations; everything on the organization's events    |
+| Organization member ("organizer") | events of their organization          | create, edit, publish and purge events; attendees, staff, dashboard        |
+| Staff                             | events in `event_staff` for that user | scan, manual check-in, attendee search (minimal fields)                    |
+| Attendee                          | their own ticket via secret link      | view/download ticket                                                       |
 
 Every query on tenant data is scoped by `organization_id` through a small repository helper
 (`scoped(db, ctx)`), and every route has an authorization test. Postgres row-level security is
@@ -159,8 +159,8 @@ Summary of [ADR-0002](adr/0002-qr-token-format-and-key-management.md):
   encrypted (AES-256-GCM) with a server master key from the environment; the public key is
   served to authorized scanners.
 - Token = compact binary payload `{formatVersion, eventId, attendeeId, keyVersion, nonce}`
-  + 64-byte signature, encoded as base64url with a `PL1.` prefix (~150 characters, fits
-  comfortably in a QR at error-correction level M).
+  - 64-byte signature, encoded as base64url with a `PL1.` prefix (~150 characters, fits
+    comfortably in a QR at error-correction level M).
 - `packages/core` implements encode/decode/sign/verify with `@noble/curves` (pure JS,
   audited) so the exact same code runs in Node, browsers and React Native. Randomness is
   injected (`getRandomValues`), keeping core free of platform APIs.
@@ -225,12 +225,12 @@ check-ins: simple, works behind any proxy, cheap at MVP scale. SSE backed by Pos
 
 ## 12. Testing strategy
 
-| Level | Tool | Focus |
-|---|---|---|
-| Unit | Vitest | `packages/core`: token encode/verify, tampering, key versions, Zod schemas |
+| Level       | Tool                                          | Focus                                                                                                      |
+| ----------- | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Unit        | Vitest                                        | `packages/core`: token encode/verify, tampering, key versions, Zod schemas                                 |
 | Integration | Vitest + real Postgres (CI service container) | check-in idempotency under concurrency, authorization matrix per route, CSV import, offline sync conflicts |
-| E2E | Playwright | sign up → create event → register → scan → dashboard; offline scan with network loss |
-| Contract | CI script | `openapi.json` up to date; generated client compiles |
+| E2E         | Playwright                                    | sign up → create event → register → scan → dashboard; offline scan with network loss                       |
+| Contract    | CI script                                     | `openapi.json` up to date; generated client compiles                                                       |
 
 ## 13. Planned dependencies
 
@@ -238,20 +238,20 @@ Each is justified again when added in its phase (license, maintenance, size). Li
 verified at install time; all listed are expected to be permissive (MIT, ISC, Apache-2.0),
 which are compatible with AGPL-3.0.
 
-| Area | Package | Why |
-|---|---|---|
-| Monorepo | `turbo` | required by the stack |
-| API | `hono`, `@hono/node-server`, `@hono/zod-openapi` | required by the stack; OpenAPI from Zod |
-| Validation | `zod` | required by the stack |
-| DB | `drizzle-orm`, `drizzle-kit`, `pg` | required by the stack; `pg` is the reference Postgres driver |
-| Auth | `better-auth` | required by the stack (includes organization and Expo plugins) |
-| Crypto | `@noble/curves` | Ed25519 that runs identically in Node, browsers and React Native |
-| QR | `qrcode`, `@yudiel/react-qr-scanner` | named in the brief |
-| Typed client | `openapi-typescript`, `openapi-fetch` | generated clients from OpenAPI, works in Expo |
-| Web | `next`, `tailwindcss`, shadcn/ui, `next-intl`, `@serwist/next`, `idb` | stack; i18n; PWA; tiny IndexedDB wrapper |
-| Email | `nodemailer` | required by the stack |
-| Ops | `pino`, `hono-rate-limiter` | structured logging with redaction; rate limiting |
-| Tests | `vitest`, `@playwright/test` | required by the stack |
+| Area         | Package                                                               | Why                                                              |
+| ------------ | --------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Monorepo     | `turbo`                                                               | required by the stack                                            |
+| API          | `hono`, `@hono/node-server`, `@hono/zod-openapi`                      | required by the stack; OpenAPI from Zod                          |
+| Validation   | `zod`                                                                 | required by the stack                                            |
+| DB           | `drizzle-orm`, `drizzle-kit`, `pg`                                    | required by the stack; `pg` is the reference Postgres driver     |
+| Auth         | `better-auth`                                                         | required by the stack (includes organization and Expo plugins)   |
+| Crypto       | `@noble/curves`                                                       | Ed25519 that runs identically in Node, browsers and React Native |
+| QR           | `qrcode`, `@yudiel/react-qr-scanner`                                  | named in the brief                                               |
+| Typed client | `openapi-typescript`, `openapi-fetch`                                 | generated clients from OpenAPI, works in Expo                    |
+| Web          | `next`, `tailwindcss`, shadcn/ui, `next-intl`, `@serwist/next`, `idb` | stack; i18n; PWA; tiny IndexedDB wrapper                         |
+| Email        | `nodemailer`                                                          | required by the stack                                            |
+| Ops          | `pino`, `hono-rate-limiter`                                           | structured logging with redaction; rate limiting                 |
+| Tests        | `vitest`, `@playwright/test`                                          | required by the stack                                            |
 
 ## 14. Runtime versions
 

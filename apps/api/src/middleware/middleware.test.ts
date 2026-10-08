@@ -30,7 +30,13 @@ function testApp(...middleware: MiddlewareHandler<AppEnv>[]) {
     c.set("requestId", "test");
     await next();
   });
-  app.use(requestContext({ logger: pino({ level: "silent" }), trustedProxyHops: 1, getSocketAddress: () => undefined }));
+  app.use(
+    requestContext({
+      logger: pino({ level: "silent" }),
+      trustedProxyHops: 1,
+      getSocketAddress: () => undefined,
+    }),
+  );
   for (const m of middleware) app.use(m);
   app.all("/thing", (c) => c.json({ ok: true }));
   return app;
@@ -39,7 +45,15 @@ function testApp(...middleware: MiddlewareHandler<AppEnv>[]) {
 describe("rateLimit", () => {
   it("allows up to max requests per window and then answers 429 with Retry-After", async () => {
     let now = 0;
-    const app = testApp(rateLimit({ name: "t", windowMs: 1_000, max: 2, store: new MemoryRateLimitStore(), now: () => now }));
+    const app = testApp(
+      rateLimit({
+        name: "t",
+        windowMs: 1_000,
+        max: 2,
+        store: new MemoryRateLimitStore(),
+        now: () => now,
+      }),
+    );
     const hit = () => app.request("/thing", { headers: { "x-forwarded-for": "9.9.9.9" } });
 
     expect((await hit()).status).toBe(200);
@@ -54,10 +68,18 @@ describe("rateLimit", () => {
   });
 
   it("counts each client IP separately", async () => {
-    const app = testApp(rateLimit({ name: "t", windowMs: 60_000, max: 1, store: new MemoryRateLimitStore() }));
-    expect((await app.request("/thing", { headers: { "x-forwarded-for": "1.1.1.1" } })).status).toBe(200);
-    expect((await app.request("/thing", { headers: { "x-forwarded-for": "2.2.2.2" } })).status).toBe(200);
-    expect((await app.request("/thing", { headers: { "x-forwarded-for": "1.1.1.1" } })).status).toBe(429);
+    const app = testApp(
+      rateLimit({ name: "t", windowMs: 60_000, max: 1, store: new MemoryRateLimitStore() }),
+    );
+    expect(
+      (await app.request("/thing", { headers: { "x-forwarded-for": "1.1.1.1" } })).status,
+    ).toBe(200);
+    expect(
+      (await app.request("/thing", { headers: { "x-forwarded-for": "2.2.2.2" } })).status,
+    ).toBe(200);
+    expect(
+      (await app.request("/thing", { headers: { "x-forwarded-for": "1.1.1.1" } })).status,
+    ).toBe(429);
   });
 });
 
@@ -69,22 +91,34 @@ describe("originCheck", () => {
   });
 
   it("accepts state-changing requests from a trusted origin", async () => {
-    const response = await app.request("/thing", { method: "POST", headers: { origin: "http://localhost:3000" } });
+    const response = await app.request("/thing", {
+      method: "POST",
+      headers: { origin: "http://localhost:3000" },
+    });
     expect(response.status).toBe(200);
   });
 
   it("accepts same-origin requests without an Origin header", async () => {
-    const response = await app.request("/thing", { method: "POST", headers: { "sec-fetch-site": "same-origin" } });
+    const response = await app.request("/thing", {
+      method: "POST",
+      headers: { "sec-fetch-site": "same-origin" },
+    });
     expect(response.status).toBe(200);
   });
 
   it("rejects foreign or missing origins", async () => {
-    expect((await app.request("/thing", { method: "POST", headers: { origin: "https://evil.example" } })).status).toBe(403);
+    expect(
+      (await app.request("/thing", { method: "POST", headers: { origin: "https://evil.example" } }))
+        .status,
+    ).toBe(403);
     expect((await app.request("/thing", { method: "DELETE" })).status).toBe(403);
   });
 
   it("exempts bearer-token clients", async () => {
-    const response = await app.request("/thing", { method: "POST", headers: { authorization: "Bearer abc" } });
+    const response = await app.request("/thing", {
+      method: "POST",
+      headers: { authorization: "Bearer abc" },
+    });
     expect(response.status).toBe(200);
   });
 });

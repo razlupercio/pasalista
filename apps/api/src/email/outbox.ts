@@ -3,7 +3,13 @@ import type { Database } from "@pasalista/db";
 import { schema } from "@pasalista/db";
 import { and, asc, eq, lte } from "drizzle-orm";
 import type { Logger } from "pino";
-import { emailPayloadSchemas, isEmailKind, renderEmail, type EmailKind, type EmailPayload } from "./templates.ts";
+import {
+  emailPayloadSchemas,
+  isEmailKind,
+  renderEmail,
+  type EmailKind,
+  type EmailPayload,
+} from "./templates.ts";
 import type { EmailTransport } from "./transport.ts";
 
 const { emailOutbox } = schema;
@@ -58,7 +64,13 @@ export async function processOutboxBatch(
         await transport.send({ to: row.toEmail, ...rendered });
         await tx
           .update(emailOutbox)
-          .set({ status: "sent", sentAt: now, payload: {}, attempts: row.attempts + 1, lastError: null })
+          .set({
+            status: "sent",
+            sentAt: now,
+            payload: {},
+            attempts: row.attempts + 1,
+            lastError: null,
+          })
           .where(eq(emailOutbox.id, row.id));
         sent += 1;
       } catch (error) {
@@ -77,7 +89,10 @@ export async function processOutboxBatch(
           .where(eq(emailOutbox.id, row.id));
         failed += 1;
         // Id and kind only: recipient and payload are personal data / secrets.
-        logger.warn({ emailId: row.id, kind: row.kind, attempts, exhausted }, "email delivery failed");
+        logger.warn(
+          { emailId: row.id, kind: row.kind, attempts, exhausted },
+          "email delivery failed",
+        );
       }
     }
     return { sent, failed };

@@ -10,7 +10,10 @@ describe("GET /api/v1/health", () => {
   it("reports the API and database as healthy", async () => {
     const response = await ctx.app.request("/api/v1/health");
     expect(response.status).toBe(200);
-    expect(healthResponseSchema.parse(await response.json())).toMatchObject({ status: "ok", database: "ok" });
+    expect(healthResponseSchema.parse(await response.json())).toMatchObject({
+      status: "ok",
+      database: "ok",
+    });
   });
 
   it("sets security headers, a request id and no-store caching", async () => {
@@ -24,7 +27,9 @@ describe("GET /api/v1/health", () => {
   });
 
   it("reports degraded when the database is unreachable", async () => {
-    const broken = createTestContext({ DATABASE_URL: "postgres://nobody:nothing@127.0.0.1:1/none" });
+    const broken = createTestContext({
+      DATABASE_URL: "postgres://nobody:nothing@127.0.0.1:1/none",
+    });
     try {
       const response = await broken.app.request("/api/v1/health");
       expect(response.status).toBe(503);
@@ -41,7 +46,11 @@ describe("errors", () => {
     expect(response.status).toBe(404);
     expect(response.headers.get("content-type")).toBe("application/problem+json");
     const body = problemSchema.parse(await response.json());
-    expect(body).toMatchObject({ status: 404, code: "not_found", instance: "/api/v1/does-not-exist" });
+    expect(body).toMatchObject({
+      status: 404,
+      code: "not_found",
+      instance: "/api/v1/does-not-exist",
+    });
     expect(body.requestId).toBe(response.headers.get("x-request-id"));
   });
 });

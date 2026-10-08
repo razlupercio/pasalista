@@ -17,9 +17,7 @@ export function originCheck(trustedOrigins: readonly string[]): MiddlewareHandle
     if (c.req.header("authorization")?.startsWith("Bearer ")) return next();
 
     const origin = c.req.header("origin");
-    const allowed = origin
-      ? trusted.has(origin)
-      : c.req.header("sec-fetch-site") === "same-origin";
+    const allowed = origin ? trusted.has(origin) : c.req.header("sec-fetch-site") === "same-origin";
     if (!allowed) return problem(c, 403, "invalid_origin");
     return next();
   };

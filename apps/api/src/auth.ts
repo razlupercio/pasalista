@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { defaultLocale, isLocale, PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH, uuidv7 } from "@pasalista/core";
+import {
+  defaultLocale,
+  isLocale,
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
+  uuidv7,
+} from "@pasalista/core";
 import { schema, type Database } from "@pasalista/db";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
@@ -40,7 +46,9 @@ export async function ensurePersonalOrganization(
       .values({ name: user.name, slug: `personal-${randomSlugSuffix()}`, isPersonal: true })
       .returning({ id: organizations.id });
     if (!org) throw new Error("Failed to create personal organization");
-    await tx.insert(organizationMembers).values({ organizationId: org.id, userId: user.id, role: "owner" });
+    await tx
+      .insert(organizationMembers)
+      .values({ organizationId: org.id, userId: user.id, role: "owner" });
     return org.id;
   });
 }
@@ -118,6 +126,9 @@ export function createAuth(options: { db: Database; env: Env }) {
         "/sign-in/magic-link": { window: 60, max: 3 },
         "/request-password-reset": { window: 60, max: 3 },
         "/send-verification-email": { window: 60, max: 3 },
+        // Read-only session lookups are also made server-side by Next.js on every page render.
+        "/get-session": false,
+        "/organization/get-full-organization": false,
       },
     },
     databaseHooks: {
@@ -165,7 +176,12 @@ export function createAuth(options: { db: Database; env: Env }) {
             .from(users)
             .where(eq(users.email, email.toLowerCase()));
           if (!user) return;
-          await enqueueEmail(db, { kind: "magic_link", to: email, locale: localeOf(user.locale), payload: { url } });
+          await enqueueEmail(db, {
+            kind: "magic_link",
+            to: email,
+            locale: localeOf(user.locale),
+            payload: { url },
+          });
         },
       }),
     ],

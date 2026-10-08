@@ -24,7 +24,10 @@ async function userByEmail(email: string) {
 }
 
 function signIn(email: string, password = PASSWORD, ip = randomIp()) {
-  return ctx.app.request("/api/v1/auth/sign-in/email", jsonRequest("POST", { email, password }, { ip }));
+  return ctx.app.request(
+    "/api/v1/auth/sign-in/email",
+    jsonRequest("POST", { email, password }, { ip }),
+  );
 }
 
 describe("sign-up", () => {
@@ -37,9 +40,15 @@ describe("sign-up", () => {
     expect(user).toMatchObject({ emailVerified: false, locale: "en" });
 
     const memberships = await ctx.db
-      .select({ role: schema.organizationMembers.role, isPersonal: schema.organizations.isPersonal })
+      .select({
+        role: schema.organizationMembers.role,
+        isPersonal: schema.organizations.isPersonal,
+      })
       .from(schema.organizationMembers)
-      .innerJoin(schema.organizations, eq(schema.organizations.id, schema.organizationMembers.organizationId))
+      .innerJoin(
+        schema.organizations,
+        eq(schema.organizations.id, schema.organizationMembers.organizationId),
+      )
       .where(eq(schema.organizationMembers.userId, user!.id));
     expect(memberships).toEqual([{ role: "owner", isPersonal: true }]);
   });
@@ -49,13 +58,20 @@ describe("sign-up", () => {
     await signUp(ctx, email, "en");
     const mail = await latestEmail(ctx, email);
     expect(mail).toMatchObject({ kind: "verify_email", locale: "en", status: "pending" });
-    expect(String(mail?.payload.url)).toMatch(/^http:\/\/localhost:3000\/api\/v1\/auth\/verify-email\?token=/);
+    expect(String(mail?.payload.url)).toMatch(
+      /^http:\/\/localhost:3000\/api\/v1\/auth\/verify-email\?token=/,
+    );
   });
 
   it("rejects passwords shorter than 12 characters", async () => {
     const response = await ctx.app.request(
       "/api/v1/auth/sign-up/email",
-      jsonRequest("POST", { name: "Ana", email: uniqueEmail(), password: "short-pass", locale: "es-MX" }),
+      jsonRequest("POST", {
+        name: "Ana",
+        email: uniqueEmail(),
+        password: "short-pass",
+        locale: "es-MX",
+      }),
     );
     expect(response.status).toBe(400);
   });
@@ -63,7 +79,11 @@ describe("sign-up", () => {
   it("rejects requests from untrusted origins", async () => {
     const response = await ctx.app.request(
       "/api/v1/auth/sign-up/email",
-      jsonRequest("POST", { name: "Ana", email: uniqueEmail(), password: PASSWORD, locale: "es-MX" }, { origin: "https://evil.example" }),
+      jsonRequest(
+        "POST",
+        { name: "Ana", email: uniqueEmail(), password: PASSWORD, locale: "es-MX" },
+        { origin: "https://evil.example" },
+      ),
     );
     expect(response.status).toBe(403);
   });
@@ -87,7 +107,10 @@ describe("sign-in", () => {
     expect(cookie).toContain("pasalista.session_token=");
 
     const session = await ctx.app.request("/api/v1/auth/get-session", { headers: { cookie } });
-    const body = (await session.json()) as { user: { email: string }; session: { activeOrganizationId: string | null } };
+    const body = (await session.json()) as {
+      user: { email: string };
+      session: { activeOrganizationId: string | null };
+    };
     expect(body.user.email).toBe(email);
     expect(body.session.activeOrganizationId).toBeTruthy();
   });
@@ -96,7 +119,9 @@ describe("sign-in", () => {
     const email = uniqueEmail();
     await signUpAndVerify(ctx, email);
     const response = await signIn(email);
-    const sessionCookie = response.headers.getSetCookie().find((c) => c.startsWith("pasalista.session_token="));
+    const sessionCookie = response.headers
+      .getSetCookie()
+      .find((c) => c.startsWith("pasalista.session_token="));
     expect(sessionCookie).toMatch(/HttpOnly/i);
     expect(sessionCookie).toMatch(/SameSite=Lax/i);
   });
@@ -115,7 +140,8 @@ describe("sign-in", () => {
     const ip = randomIp();
     const email = uniqueEmail();
     const statuses: number[] = [];
-    for (let i = 0; i < 7; i++) statuses.push((await signIn(email, "wrong password here", ip)).status);
+    for (let i = 0; i < 7; i++)
+      statuses.push((await signIn(email, "wrong password here", ip)).status);
     expect(statuses.slice(0, 5).every((s) => s === 401)).toBe(true);
     expect(statuses.at(-1)).toBe(429);
   });
@@ -135,7 +161,9 @@ describe("password reset", () => {
     expect(mail?.kind).toBe("reset_password");
 
     // The emailed link redirects to the web page with the token in the query string.
-    const redirect = await ctx.app.request(pathOf(mail?.payload.url), { headers: { "x-forwarded-for": randomIp() } });
+    const redirect = await ctx.app.request(pathOf(mail?.payload.url), {
+      headers: { "x-forwarded-for": randomIp() },
+    });
     const location = new URL(redirect.headers.get("location") ?? "", "http://localhost:3000");
     const token = location.searchParams.get("token");
     expect(token).toBeTruthy();
@@ -167,7 +195,10 @@ describe("magic link", () => {
     const unknown = uniqueEmail("ghost");
 
     const send = (email: string) =>
-      ctx.app.request("/api/v1/auth/sign-in/magic-link", jsonRequest("POST", { email, callbackURL: "/es-MX/dashboard" }));
+      ctx.app.request(
+        "/api/v1/auth/sign-in/magic-link",
+        jsonRequest("POST", { email, callbackURL: "/es-MX/dashboard" }),
+      );
     const a = await send(existing);
     const b = await send(unknown);
     expect(a.status).toBe(200);

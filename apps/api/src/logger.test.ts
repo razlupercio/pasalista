@@ -31,7 +31,15 @@ describe("logger redaction", () => {
       "event",
     );
     const output = lines.join("");
-    for (const secret of ["hunter2", "PL1.secret", "ana@example.com", "Ana López", "token=abc", "Bearer abc", "session_token"]) {
+    for (const secret of [
+      "hunter2",
+      "PL1.secret",
+      "ana@example.com",
+      "Ana López",
+      "token=abc",
+      "Bearer abc",
+      "session_token",
+    ]) {
       expect(output).not.toContain(secret);
     }
     expect(output).toContain("[redacted]");

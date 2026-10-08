@@ -6,6 +6,7 @@ import { bodyLimit } from "hono/body-limit";
 import { HTTPException } from "hono/http-exception";
 import { requestId } from "hono/request-id";
 import { secureHeaders } from "hono/secure-headers";
+import type { Context } from "hono";
 import type { Logger } from "pino";
 import { AUTH_BASE_PATH, type Auth } from "./auth.ts";
 import type { Env } from "./env.ts";
@@ -63,7 +64,9 @@ export function createApp(deps: AppDeps) {
       contentSecurityPolicy: { defaultSrc: ["'none'"], frameAncestors: ["'none'"] },
       crossOriginResourcePolicy: "same-origin",
       referrerPolicy: "no-referrer",
-      strictTransportSecurity: env.PUBLIC_URL.startsWith("https://") ? "max-age=31536000; includeSubDomains" : false,
+      strictTransportSecurity: env.PUBLIC_URL.startsWith("https://")
+        ? "max-age=31536000; includeSubDomains"
+        : false,
     }),
   );
   app.use(`${API_PREFIX}/*`, async (c, next) => {
@@ -74,7 +77,8 @@ export function createApp(deps: AppDeps) {
     `${API_PREFIX}/*`,
     bodyLimit({
       maxSize: 1024 * 1024,
-      onError: (c) => problem(c, 413, "bad_request", { detail: "Payload too large" }),
+      onError: (c) =>
+        problem(c as Context<AppEnv>, 413, "bad_request", { detail: "Payload too large" }),
     }),
   );
 
@@ -91,7 +95,15 @@ export function createApp(deps: AppDeps) {
   // Everything else under /api/v1: CSRF origin check and a general rate limit.
   const api = new OpenAPIHono<AppEnv>();
   api.use(originCheck(trustedOrigins));
-  api.use(rateLimit({ name: "api", windowMs: 60_000, max: 300, store: rateLimitStore, enabled: env.RATE_LIMIT_ENABLED }));
+  api.use(
+    rateLimit({
+      name: "api",
+      windowMs: 60_000,
+      max: 300,
+      store: rateLimitStore,
+      enabled: env.RATE_LIMIT_ENABLED,
+    }),
+  );
   api.route("/", healthRoutes({ db, version: env.APP_VERSION }));
   app.route(API_PREFIX, api);
 
@@ -107,10 +119,13 @@ export function createApp(deps: AppDeps) {
   app.notFound((c) => problem(c, 404, "not_found"));
   app.onError((error, c) => {
     if (error instanceof ApiError) {
-      return problem(c, error.status, error.code, { detail: error.message, ...(error.issues ? { issues: error.issues } : {}) });
+      return problem(c, error.status, error.code, {
+        detail: error.message,
+        ...(error.issues ? { issues: error.issues } : {}),
+      });
     }
     if (error instanceof HTTPException) {
-      return problem(c, error.status as 400, "bad_request");
+      return problem(c, error.status, "bad_request");
     }
     c.get("logger").error({ err: error }, "unhandled error");
     return problem(c, 500, "internal_error");

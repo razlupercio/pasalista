@@ -11,8 +11,14 @@ const healthRoute = createRoute({
   tags: ["system"],
   summary: "Liveness and database connectivity",
   responses: {
-    200: { description: "API and database are healthy", content: { "application/json": { schema: healthResponseSchema } } },
-    503: { description: "Database is unavailable", content: { "application/json": { schema: healthResponseSchema } } },
+    200: {
+      description: "API and database are healthy",
+      content: { "application/json": { schema: healthResponseSchema } },
+    },
+    503: {
+      description: "Database is unavailable",
+      content: { "application/json": { schema: healthResponseSchema } },
+    },
   },
 });
 
@@ -37,7 +43,11 @@ async function databaseIsUp(db: Database): Promise<boolean> {
 export function healthRoutes(deps: { db: Database; version: string }) {
   return new OpenAPIHono<AppEnv>().openapi(healthRoute, async (c) => {
     const up = await databaseIsUp(deps.db);
-    const body = { status: up ? "ok" : "degraded", database: up ? "ok" : "unavailable", version: deps.version } as const;
+    const body = {
+      status: up ? "ok" : "degraded",
+      database: up ? "ok" : "unavailable",
+      version: deps.version,
+    } as const;
     return up ? c.json(body, 200) : c.json(body, 503);
   });
 }

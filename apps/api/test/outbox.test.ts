@@ -15,15 +15,19 @@ function recordingTransport(fail = false): EmailTransport & { sent: OutgoingEmai
   const sent: OutgoingEmail[] = [];
   return {
     sent,
-    async send(email) {
-      if (fail) throw new Error("SMTP unavailable");
+    send(email) {
+      if (fail) return Promise.reject(new Error("SMTP unavailable"));
       sent.push(email);
+      return Promise.resolve();
     },
   };
 }
 
 async function rowFor(to: string) {
-  const [row] = await ctx.db.select().from(schema.emailOutbox).where(eq(schema.emailOutbox.toEmail, to));
+  const [row] = await ctx.db
+    .select()
+    .from(schema.emailOutbox)
+    .where(eq(schema.emailOutbox.toEmail, to));
   return row!;
 }
 
@@ -54,7 +58,12 @@ describe("email outbox", () => {
 
   it("retries with backoff and gives up after the maximum attempts", async () => {
     const to = uniqueEmail();
-    await enqueueEmail(ctx.db, { kind: "magic_link", to, locale: "es-MX", payload: { url: "http://localhost:3000/x" } });
+    await enqueueEmail(ctx.db, {
+      kind: "magic_link",
+      to,
+      locale: "es-MX",
+      payload: { url: "http://localhost:3000/x" },
+    });
     const failing = recordingTransport(true);
 
     await processOutboxBatch(ctx.db, failing, logger, { batchSize: 1_000, now: later(1) });
@@ -75,7 +84,12 @@ describe("email outbox", () => {
 
   it("rejects invalid payloads when enqueuing", async () => {
     await expect(
-      enqueueEmail(ctx.db, { kind: "magic_link", to: uniqueEmail(), locale: "en", payload: { url: "not a url" } }),
+      enqueueEmail(ctx.db, {
+        kind: "magic_link",
+        to: uniqueEmail(),
+        locale: "en",
+        payload: { url: "not a url" },
+      }),
     ).rejects.toThrow();
   });
 });

@@ -21,12 +21,18 @@ if (env.NODE_ENV === "production") {
 const { db, pool } = createDb(env.DATABASE_URL);
 const auth = createAuth({ db, env: { ...env, RATE_LIMIT_ENABLED: false } });
 
-const [existing] = await db.select({ id: schema.users.id }).from(schema.users).where(eq(schema.users.email, DEMO_USER.email));
+const [existing] = await db
+  .select({ id: schema.users.id })
+  .from(schema.users)
+  .where(eq(schema.users.email, DEMO_USER.email));
 if (existing) {
   console.log("Demo user already exists");
 } else {
   await auth.api.signUpEmail({ body: { ...DEMO_USER } });
-  await db.update(schema.users).set({ emailVerified: true }).where(eq(schema.users.email, DEMO_USER.email));
+  await db
+    .update(schema.users)
+    .set({ emailVerified: true })
+    .where(eq(schema.users.email, DEMO_USER.email));
   // The sign-up queued a verification email; the demo user is already verified.
   await db.delete(schema.emailOutbox).where(eq(schema.emailOutbox.toEmail, DEMO_USER.email));
   console.log(`Demo user created: ${DEMO_USER.email}`);

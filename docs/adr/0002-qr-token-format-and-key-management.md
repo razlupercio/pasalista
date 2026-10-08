@@ -18,13 +18,13 @@ rotation). Private keys never leave the API process and are never logged.
 
 **Payload (format v1)**: fixed-length binary, 47 bytes.
 
-| Offset | Size | Field |
-|---|---|---|
-| 0 | 1 | format version (`0x01`) |
-| 1 | 16 | `eventId` (UUID bytes) |
-| 17 | 16 | `attendeeId` (UUID bytes) |
-| 33 | 2 | `keyVersion` (uint16, big-endian) |
-| 35 | 12 | `nonce` (random, per ticket issuance) |
+| Offset | Size | Field                                 |
+| ------ | ---- | ------------------------------------- |
+| 0      | 1    | format version (`0x01`)               |
+| 1      | 16   | `eventId` (UUID bytes)                |
+| 17     | 16   | `attendeeId` (UUID bytes)             |
+| 33     | 2    | `keyVersion` (uint16, big-endian)     |
+| 35     | 12   | `nonce` (random, per ticket issuance) |
 
 **Signature.** Ed25519 over the ASCII prefix `pasalista:qr:v1` followed by the payload
 (domain separation), 64 bytes.

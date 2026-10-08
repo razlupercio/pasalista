@@ -9,10 +9,12 @@ We start as a web application, but the architecture must allow scaling and addin
 mobile app later without rewriting business logic.
 
 ## GOAL
+
 An organizer creates an event, defines how attendees register and, on the day of the event,
 staff scan QR codes to validate entry. Simple, fast and reliable, even without internet.
 
 ## STACK (all open source, self-hostable)
+
 - Monorepo: pnpm workspaces + Turborepo
 - Language: strict TypeScript across the whole project
 - `apps/web`: Next.js (App Router) + Tailwind CSS + shadcn/ui, configured as a PWA
@@ -30,19 +32,21 @@ staff scan QR codes to validate entry. Simple, fast and reliable, even without i
   reusing `packages/core` and consuming `apps/api`
 
 ## ROLES
+
 - Organizer (event owner)
 - Staff / scanner (limited access: only validate attendance for assigned events)
 - Attendee (registers, receives and shows their QR)
 
 ## FEATURES (MVP)
+
 1. Auth: sign up, log in, log out, password recovery.
 2. Events (CRUD): name, description, date/time, time zone, venue, optional capacity,
    registration mode, status (draft/published/closed).
 3. Two registration modes per event:
    a) OPEN: public page with a link/slug where anyone registers (name, email, optional
-      extra fields). Optional maximum capacity and deadline.
+   extra fields). Optional maximum capacity and deadline.
    b) CLOSED LIST: the organizer uploads attendees manually or via CSV; only they receive
-      an invitation with their QR by email. Uninvited registrations are rejected.
+   an invitation with their QR by email. Uninvited registrations are rejected.
 4. QR per attendee: generated on registration/invitation, sent by email and shown on a
    "my ticket" page (downloadable and addable to the home screen).
 5. Attendance validation (scanner mode, optimized for phones):
@@ -55,6 +59,7 @@ staff scan QR codes to validate entry. Simple, fast and reliable, even without i
 7. Staff management: the organizer invites scanners to an event.
 
 ## QR AND SECURITY (first-class requirement)
+
 - QR token signed with **Ed25519** (per-event key). The server signs; the scanner only
   receives the event's public key, so it can verify authenticity WITHOUT network access
   and without exposing secrets. Minimal payload: eventId, attendeeId (UUIDv7/random),
@@ -71,6 +76,7 @@ staff scan QR codes to validate entry. Simple, fast and reliable, even without i
 - Audit trail: record who validated what and when.
 
 ## OFFLINE MODE (implemented in Phase 4b)
+
 - PWA scanner with Service Worker + IndexedDB: before the event it downloads the public key,
   the attendee list (minimal hashes/IDs) and the revocation list.
 - Offline check-ins queued locally with `clientCheckInId` (UUID) + timestamp + `deviceId`;
@@ -81,6 +87,7 @@ staff scan QR codes to validate entry. Simple, fast and reliable, even without i
 - E2E tests that simulate network loss.
 
 ## DESIGN FOR SCALE
+
 - Versioned API (`/v1`), contracts defined with Zod + OpenAPI, to generate typed clients.
 - Check-in with a UNIQUE constraint in the database and a transaction to guarantee idempotency.
 - Initial data model (adjust it if you see improvements and justify it): users, events,
@@ -89,20 +96,25 @@ staff scan QR codes to validate entry. Simple, fast and reliable, even without i
 - i18n from the start (es-MX and en) with next-intl or equivalent.
 
 ## UX
+
 - Mobile-first, accessible (WCAG AA), light/dark mode.
 - Scanner flow: at most 2 taps to start scanning; visual and haptic/sound feedback.
 
 ## LICENSE AND SUSTAINABILITY MODEL
+
 - AGPL-3.0 (`AGPL-3.0-or-later`). Include LICENSE (already present), SPDX headers and a README
   section on donations (GitHub Sponsors / Open Collective) and a commercial license option.
 - Model: free open source; commercial license for those who do not want to comply with AGPL;
   paid hosted version for those who do not want to self-host.
 
 ## OUT OF MVP (v2)
+
 Payments, ticket sales, multiple ticket types, wallet passes (Apple/Google Wallet).
 
 ## WORKFLOW
+
 Work in phases and do NOT advance to the next without my confirmation:
+
 - **Phase 0:** architecture proposal, folder structure, data model (ER diagram in
   Mermaid) and milestone plan. Ask me about anything ambiguous BEFORE writing code.
 - **Phase 1:** monorepo scaffolding, Docker Compose, CI, DB + migrations, auth.
@@ -117,5 +129,6 @@ generation and verification, check-in idempotency, authorization, offline sync) 
 app running with `docker compose up`.
 
 ## OPEN SOURCE REPO DELIVERABLES
+
 Clear README (5-minute quickstart), `.env.example`, CONTRIBUTING.md, CODE_OF_CONDUCT.md,
 SECURITY.md, issue/PR templates, Dependabot and CodeQL enabled.

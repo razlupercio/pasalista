@@ -6,11 +6,7 @@ import { localeSchema } from "./locale.ts";
 export const PASSWORD_MIN_LENGTH = 12;
 export const PASSWORD_MAX_LENGTH = 128;
 
-export const emailSchema = z
-  .string()
-  .trim()
-  .toLowerCase()
-  .pipe(z.email().max(254));
+export const emailSchema = z.string().trim().toLowerCase().pipe(z.email().max(254));
 
 export const passwordSchema = z.string().min(PASSWORD_MIN_LENGTH).max(PASSWORD_MAX_LENGTH);
 

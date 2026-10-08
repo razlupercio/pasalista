@@ -16,7 +16,9 @@ export const defaultRandomSource: RandomSource = (bytes) => {
   return webCrypto.getRandomValues(bytes);
 };
 
-const HEX: readonly string[] = Array.from({ length: 256 }, (_, i) => i.toString(16).padStart(2, "0"));
+const HEX: readonly string[] = Array.from({ length: 256 }, (_, i) =>
+  i.toString(16).padStart(2, "0"),
+);
 
 function toUuidString(bytes: Uint8Array): string {
   let out = "";
@@ -31,7 +33,10 @@ function toUuidString(bytes: Uint8Array): string {
  * RFC 9562 UUIDv7: 48-bit Unix timestamp in milliseconds followed by 74 random bits.
  * Time-ordered (good index locality) but not enumerable.
  */
-export function uuidv7(now: number = Date.now(), random: RandomSource = defaultRandomSource): string {
+export function uuidv7(
+  now: number = Date.now(),
+  random: RandomSource = defaultRandomSource,
+): string {
   if (!Number.isSafeInteger(now) || now < 0 || now > 0xffff_ffff_ffff) {
     throw new RangeError("Timestamp out of range for UUIDv7");
   }

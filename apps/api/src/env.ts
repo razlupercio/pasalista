@@ -13,7 +13,9 @@ const envSchema = z
   .object({
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
     PORT: z.coerce.number().int().min(1).max(65_535).default(3001),
-    LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
+    LOG_LEVEL: z
+      .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
+      .default("info"),
     APP_VERSION: z.string().default("0.1.0"),
     DATABASE_URL: z.url(),
     /** Public origin of the web app (single origin, see ADR-0004). Used for links and CSRF checks. */
@@ -62,7 +64,9 @@ export function loadEnv(source: Record<string, string | undefined> = process.env
   const result = envSchema.safeParse(merged);
   if (!result.success) {
     // Only variable names and messages: never print values, they may be secrets.
-    const problems = result.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`);
+    const problems = result.error.issues.map(
+      (issue) => `${issue.path.join(".")}: ${issue.message}`,
+    );
     throw new Error(`Invalid environment configuration:\n- ${problems.join("\n- ")}`);
   }
   return result.data;
