@@ -48,7 +48,7 @@ flowchart LR
   See [ADR-0004](adr/0004-single-origin-deployment-and-sessions.md).
 - **Next.js has no business logic.** It renders UI and calls the API through the generated
   typed client. Server components may call the API server-side, forwarding the session cookie.
-- **The API owns everything else:** auth (Better Auth mounted at `/v1/auth/*`), validation,
+- **The API owns everything else:** auth (Better Auth mounted at `/api/v1/auth/*`), validation,
   authorization, token signing, check-in, email outbox, audit.
 - **Mobile (future)** talks to the API directly with a bearer session (Better Auth Expo
   plugin) and reuses `packages/core` for offline token verification.
@@ -100,7 +100,7 @@ packages/core ──► (nothing internal; only Zod and @noble/curves)
 
 ## 4. API design
 
-- REST under `/v1`, defined with `@hono/zod-openapi`: each route declares its Zod request
+- REST under `/api/v1` (the same prefix inside the API and on the public origin, ADR-0006), defined with `@hono/zod-openapi`: each route declares its Zod request
   and response schemas, which are imported from `packages/core`. The OpenAPI document is
   generated from the routes, committed, and CI fails if it is stale.
 - Typed client: `openapi-typescript` generates types from `openapi.json` into
@@ -109,7 +109,7 @@ packages/core ──► (nothing internal; only Zod and @noble/curves)
   maps to i18n messages. Error bodies never include tokens or personal data.
 - Pagination: cursor-based (`?cursor=&limit=`), since IDs are UUIDv7 (time-ordered).
 
-Main resources (indicative, finalized per phase):
+Main resources (indicative, finalized per phase; paths shown without the `/api` prefix):
 
 | Resource     | Endpoints                                                                               | Who                                  |
 | ------------ | --------------------------------------------------------------------------------------- | ------------------------------------ |
@@ -215,7 +215,7 @@ check-ins: simple, works behind any proxy, cheap at MVP scale. SSE backed by Pos
   `Referrer-Policy: no-referrer` on ticket pages, `frame-ancestors 'none'`,
   `Permissions-Policy` allowing camera only on `/scan`.
 - Rate limiting on login, registration, ticket page, check-in and sync. Better Auth's own
-  limiter covers auth; `hono-rate-limiter` covers the rest. In-memory store in MVP (single
+  limiter covers auth; a small fixed-window limiter (ADR-0006) covers the rest. In-memory store in MVP (single
   API instance), Postgres-backed store when scaling horizontally.
 - Secrets only from environment; `.env.example` documents every variable.
 - Logging with `pino` and a redaction list: tokens, keys, emails, names, cookies and
@@ -250,12 +250,12 @@ which are compatible with AGPL-3.0.
 | Typed client | `openapi-typescript`, `openapi-fetch`                                 | generated clients from OpenAPI, works in Expo                    |
 | Web          | `next`, `tailwindcss`, shadcn/ui, `next-intl`, `@serwist/next`, `idb` | stack; i18n; PWA; tiny IndexedDB wrapper                         |
 | Email        | `nodemailer`                                                          | required by the stack                                            |
-| Ops          | `pino`, `hono-rate-limiter`                                           | structured logging with redaction; rate limiting                 |
+| Ops          | `pino`                                                                | structured logging with redaction (rate limiter is in-house)     |
 | Tests        | `vitest`, `@playwright/test`                                          | required by the stack                                            |
 
 ## 14. Runtime versions
 
-Node.js 24 LTS, pnpm 10, PostgreSQL 18 (native `uuidv7()`), TypeScript 5.x strict.
+Node.js 24 LTS, pnpm 10, PostgreSQL 18 (native `uuidv7()`), TypeScript 6.0 strict (ADR-0006).
 
 ## 15. Phase 0 decisions
 
