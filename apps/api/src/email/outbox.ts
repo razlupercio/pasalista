@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import type { Database } from "@pasalista/db";
 import { schema } from "@pasalista/db";
-import { and, asc, eq, lte } from "drizzle-orm";
+import { and, asc, eq, inArray, lte } from "drizzle-orm";
 import type { Logger } from "pino";
 import {
   emailPayloadSchemas,
@@ -43,14 +43,21 @@ export async function processOutboxBatch(
   db: Database,
   transport: EmailTransport,
   logger: Logger,
-  options: { batchSize?: number; now?: Date } = {},
+  /** `onlyIds` restricts the batch to specific rows (targeted retries, tests). */
+  options: { batchSize?: number; now?: Date; onlyIds?: string[] } = {},
 ): Promise<{ sent: number; failed: number }> {
   const now = options.now ?? new Date();
   return db.transaction(async (tx) => {
     const due = await tx
       .select()
       .from(emailOutbox)
-      .where(and(eq(emailOutbox.status, "pending"), lte(emailOutbox.nextAttemptAt, now)))
+      .where(
+        and(
+          eq(emailOutbox.status, "pending"),
+          lte(emailOutbox.nextAttemptAt, now),
+          options.onlyIds ? inArray(emailOutbox.id, options.onlyIds) : undefined,
+        ),
+      )
       .orderBy(asc(emailOutbox.nextAttemptAt))
       .limit(options.batchSize ?? 10)
       .for("update", { skipLocked: true });
@@ -103,18 +110,24 @@ export function startOutboxWorker(
   db: Database,
   transport: EmailTransport,
   logger: Logger,
-  options: { intervalMs?: number } = {},
+  options: { intervalMs?: number; batchSize?: number } = {},
 ): { stop: () => Promise<void> } {
   const intervalMs = options.intervalMs ?? 2_000;
+  const batchSize = options.batchSize ?? 25;
   let stopped = false;
   let timer: NodeJS.Timeout | undefined;
   let running: Promise<unknown> = Promise.resolve();
 
   const tick = () => {
-    running = processOutboxBatch(db, transport, logger)
+    let busy = false;
+    running = processOutboxBatch(db, transport, logger, { batchSize })
+      .then(({ sent, failed }) => {
+        // A full batch means more is probably waiting (e.g. bulk invitations): continue now.
+        busy = sent + failed >= batchSize;
+      })
       .catch((error: unknown) => logger.error({ err: error }, "email outbox worker error"))
       .finally(() => {
-        if (!stopped) timer = setTimeout(tick, intervalMs);
+        if (!stopped) timer = setTimeout(tick, busy ? 0 : intervalMs);
       });
   };
   tick();

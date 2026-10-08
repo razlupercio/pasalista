@@ -157,6 +157,30 @@ export function createAuth(options: { db: Database; env: Env }) {
       organization({
         creatorRole: "owner",
         organizationLimit: 20,
+        // Deleting an organization cascades to its events; data purge is designed in Phase 5.
+        disableOrganizationDeletion: true,
+        invitationExpiresIn: 7 * 24 * 60 * 60,
+        cancelPendingInvitationsOnReInvite: true,
+        // Invitations are bound to the invited email; it must be verified to accept (ADR-0008).
+        requireEmailVerificationOnInvitation: true,
+        sendInvitationEmail: async ({ id, email, organization, inviter }) => {
+          const [inviterRow] = await db
+            .select({ locale: users.locale })
+            .from(users)
+            .where(eq(users.id, inviter.user.id));
+          const locale = localeOf(inviterRow?.locale);
+          await enqueueEmail(db, {
+            kind: "team_invitation",
+            to: email,
+            locale,
+            organizationId: organization.id,
+            payload: {
+              inviterName: inviter.user.name,
+              organizationName: organization.name,
+              url: `${env.PUBLIC_URL}/${locale}/invitations/team/${id}`,
+            },
+          });
+        },
         schema: {
           organization: {
             additionalFields: {

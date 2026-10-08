@@ -14,6 +14,7 @@ export interface SessionUser {
   id: string;
   name: string;
   email: string;
+  emailVerified: boolean;
 }
 
 /** Routes behind `requireUser`: the session user is always present. */
