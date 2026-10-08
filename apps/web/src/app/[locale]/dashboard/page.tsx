@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { toLocale } from "@/i18n/routing.ts";
 import type { Metadata } from "next";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
+import { EventStatusBadge } from "@/components/event-status-badge.tsx";
+import { buttonVariants } from "@/components/ui/button.tsx";
 import { Card, CardTitle } from "@/components/ui/card.tsx";
-import { redirect } from "@/i18n/navigation.ts";
+import { Link, redirect } from "@/i18n/navigation.ts";
+import { toLocale } from "@/i18n/routing.ts";
+import { serverApi } from "@/lib/api-server.ts";
+import { eventDateTimeOptions } from "@/lib/dates.ts";
 import { getActiveOrganization, getSession } from "@/lib/session.ts";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -27,10 +31,15 @@ export default async function DashboardPage({
     // Failed email-verification or magic links land here with ?error=...
     return redirect({ href: error ? "/sign-in?error=link" : "/sign-in", locale });
   }
-  const [t, organization] = await Promise.all([
+  const api = await serverApi();
+  const [t, tEvents, format, organization, events] = await Promise.all([
     getTranslations("dashboard"),
+    getTranslations("events"),
+    getFormatter(),
     getActiveOrganization(),
+    api.GET("/api/v1/events"),
   ]);
+  const list = events.data ?? [];
 
   return (
     <div className="flex flex-col gap-6">
@@ -40,9 +49,53 @@ export default async function DashboardPage({
           <p className="text-muted-foreground">{t("organization", { name: organization.name })}</p>
         ) : null}
       </div>
-      <Card>
-        <p className="text-muted-foreground">{t("emptyEvents")}</p>
-      </Card>
+
+      <section aria-labelledby="events-heading" className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 id="events-heading" className="text-xl font-semibold">
+            {t("eventsTitle")}
+          </h2>
+          <Link href="/events/new" className={buttonVariants()}>
+            {t("newEvent")}
+          </Link>
+        </div>
+
+        {list.length === 0 ? (
+          <Card>
+            <p className="text-muted-foreground">{t("emptyEvents")}</p>
+          </Card>
+        ) : (
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {list.map((event) => (
+              <li key={event.id}>
+                <Link
+                  href={`/events/${event.id}`}
+                  className="flex h-full flex-col gap-2 rounded-lg border bg-card p-4 transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="font-medium">{event.name}</span>
+                    <EventStatusBadge status={event.status} />
+                  </div>
+                  <span className="text-sm text-muted-foreground">
+                    {format.dateTime(
+                      new Date(event.startsAt),
+                      eventDateTimeOptions(event.timezone),
+                    )}
+                  </span>
+                  <span className="text-sm">
+                    {event.capacity
+                      ? tEvents("registeredOfCapacity", {
+                          count: event.registeredCount,
+                          capacity: event.capacity,
+                        })
+                      : tEvents("registeredCount", { count: event.registeredCount })}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }

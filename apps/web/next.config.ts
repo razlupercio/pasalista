@@ -38,6 +38,10 @@ const nextConfig: NextConfig = {
         source: "/:locale/reset-password",
         headers: [{ key: "Referrer-Policy", value: "no-referrer" }],
       },
+      {
+        source: "/:locale/t/:token",
+        headers: [{ key: "Referrer-Policy", value: "no-referrer" }],
+      },
     ]);
   },
 };

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { useRouter } from "@/i18n/navigation.ts";
 import { authClient } from "@/lib/auth-client.ts";
 
-export function SignOutButton() {
+export function SignOutButton({ className }: { className?: string }) {
   const t = useTranslations("nav");
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -15,6 +15,7 @@ export function SignOutButton() {
   return (
     <Button
       variant="outline"
+      className={className}
       disabled={pending}
       onClick={() =>
         startTransition(async () => {
