@@ -107,13 +107,11 @@ describe("event management", () => {
     const session = await api<{ user: { id: string } }>(ctx, "GET", "/api/v1/auth/get-session", {
       cookie: bob,
     });
-    await ctx.db
-      .insert(schema.organizationMembers)
-      .values({
-        organizationId: event.organizationId,
-        userId: session.body.user.id,
-        role: "member",
-      });
+    await ctx.db.insert(schema.organizationMembers).values({
+      organizationId: event.organizationId,
+      userId: session.body.user.id,
+      role: "member",
+    });
     const result = await api<EventBody>(ctx, "PATCH", `/api/v1/events/${event.id}`, {
       cookie: bob,
       body: { name: "Edited by a teammate" },
