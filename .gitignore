@@ -36,3 +36,6 @@ pgdata/
 
 # Claude Code local overrides
 .claude/settings.local.json
+
+# local tool caches
+.cache/
