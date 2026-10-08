@@ -20,7 +20,9 @@
     "cancel": "Cancelar",
     "back": "Volver",
     "yes": "Sí",
-    "no": "No"
+    "no": "No",
+    "close": "Cerrar",
+    "all": "Todos"
   },
   "nav": {
     "signIn": "Iniciar sesión",
@@ -93,7 +95,11 @@
     "organization": "Organización: {name}",
     "eventsTitle": "Tus eventos",
     "emptyEvents": "Aún no tienes eventos. Crea el primero para empezar a registrar asistentes.",
-    "newEvent": "Crear evento"
+    "newEvent": "Crear evento",
+    "staffEventsTitle": "Eventos donde eres staff",
+    "staffEventsHint": "Validarás la entrada en estos eventos con el escáner (disponible en la siguiente fase).",
+    "team": "Equipo",
+    "activeOrganization": "Organización activa"
   },
   "events": {
     "status": {
@@ -179,7 +185,7 @@
         "active": "Válido",
         "superseded": "Reemplazado",
         "revoked": "Revocado",
-        "none": "Sin boleto"
+        "pending": "Por enviar"
       },
       "reissue": "Enviar boleto nuevo",
       "reissueConfirm": "Se generará un QR y un enlace nuevos y se enviarán por correo. El QR anterior dejará de funcionar.",
@@ -187,7 +193,65 @@
       "revokeConfirm": "El QR actual dejará de ser válido. Podrás enviar uno nuevo después.",
       "cancel": "Cancelar registro",
       "cancelConfirm": "Se cancelará el registro y su QR dejará de ser válido.",
-      "done": "Listo."
+      "done": "Listo.",
+      "search": "Buscar por nombre o correo",
+      "filterStatus": "Registro",
+      "filterTicket": "Boleto",
+      "showing": "Mostrando {shown} de {total}",
+      "loadMore": "Mostrar más",
+      "noResults": "No hay resultados con estos filtros.",
+      "add": "Agregar invitado",
+      "addSubmit": "Agregar",
+      "added": "Invitado agregado. Envía las invitaciones cuando estés listo.",
+      "import": "Importar CSV",
+      "send": "Enviar invitaciones ({count})",
+      "sendConfirm": "Se enviará el boleto por correo a {count, plural, one {# invitado} other {# invitados}}.",
+      "sent": "{count, plural, =0 {No había invitaciones pendientes.} one {Se envió # invitación.} other {Se enviaron # invitaciones.}}",
+      "sendNeedsPublish": "Publica el evento para poder enviar invitaciones.",
+      "sendOne": "Enviar invitación",
+      "resend": "Reenviar boleto",
+      "resendConfirm": "Se enviará de nuevo el mismo QR con un enlace nuevo. El enlace anterior dejará de funcionar.",
+      "locale": "Idioma del correo"
+    },
+    "import": {
+      "title": "Importar invitados",
+      "intro": "Sube un archivo CSV con las columnas nombre y correo (opcional: idioma, con es-MX o en). Puedes exportarlo desde Excel o Google Sheets.",
+      "file": "Archivo CSV",
+      "limits": "Máximo {max} filas por archivo. Puedes subir varios archivos.",
+      "missingColumns": "No encontramos las columnas de nombre y correo en la primera fila.",
+      "tooMany": "El archivo tiene {count} filas; el máximo es {max}.",
+      "empty": "El archivo no tiene filas de invitados.",
+      "unreadable": "No pudimos leer el archivo. Guárdalo como CSV (UTF-8) e inténtalo de nuevo.",
+      "ready": "{count, plural, =0 {Ningún invitado listo} one {# invitado listo} other {# invitados listos}} para agregar.",
+      "withProblems": "{count, plural, one {# fila tiene problemas} other {# filas tienen problemas}} y no se agregará.",
+      "line": "Fila",
+      "email": "Correo",
+      "problem": "Problema",
+      "problems": {
+        "invalid_name": "Falta el nombre",
+        "invalid_email": "Correo inválido",
+        "invalid_locale": "Idioma no válido (usa es-MX o en)",
+        "duplicate_in_file": "Correo repetido en el archivo",
+        "already_on_list": "Ya está en la lista"
+      },
+      "submit": "Agregar {count, plural, one {# invitado} other {# invitados}}",
+      "done": "{count, plural, =0 {No se agregó ningún invitado.} one {Se agregó # invitado.} other {Se agregaron # invitados.}}",
+      "doneHint": "Revisa la lista y envía las invitaciones cuando estés listo.",
+      "backToEvent": "Volver al evento"
+    },
+    "staff": {
+      "title": "Staff",
+      "intro": "Personas que validarán la entrada. No pueden ver ni editar los datos del evento.",
+      "email": "Correo de la persona",
+      "invite": "Invitar",
+      "invited": "Invitación enviada. Vence en 7 días.",
+      "members": "Staff activo",
+      "pending": "Invitaciones pendientes",
+      "expires": "Vence el {date}",
+      "remove": "Quitar",
+      "removeConfirm": "¿Quitar a {name} del staff de este evento?",
+      "revoke": "Cancelar invitación",
+      "empty": "Aún no hay staff en este evento."
     }
   },
   "publicEvent": {
@@ -232,7 +296,8 @@
     "registration_closed": "El registro a este evento está cerrado.",
     "invalid_state": "Esta acción no está disponible en el estado actual.",
     "rate_limited": "Demasiados intentos. Espera un momento e inténtalo de nuevo.",
-    "generic": "Algo salió mal. Inténtalo de nuevo."
+    "generic": "Algo salió mal. Inténtalo de nuevo.",
+    "conflict": "Esto ya existe."
   },
   "emails": {
     "footer": "Recibiste este correo porque alguien usó esta dirección en PasaLista. Si no fuiste tú, ignóralo.",
@@ -262,7 +327,77 @@
       "whereLabel": "Dónde",
       "qrHint": "Muestra este código QR en la entrada. También puedes abrir tu boleto desde el enlace.",
       "qrAlt": "Código QR de tu boleto",
-      "cta": "Ver mi boleto"
+      "cta": "Ver mi boleto",
+      "bodyInvitation": "Estás invitado a {eventName}."
+    },
+    "staffInvitation": {
+      "subject": "Te invitaron como staff de {eventName}",
+      "greeting": "Hola:",
+      "body": "{inviterName} te invitó a ayudar a validar la entrada en {eventName}. Acepta con una cuenta de PasaLista que use este correo. El enlace vence en 7 días.",
+      "cta": "Ver invitación"
+    },
+    "teamInvitation": {
+      "subject": "{inviterName} te invitó a {organizationName} en PasaLista",
+      "greeting": "Hola:",
+      "body": "{inviterName} te invitó a organizar eventos con {organizationName}. Acepta con una cuenta de PasaLista que use este correo. El enlace vence en 7 días.",
+      "cta": "Ver invitación"
     }
+  },
+  "invitations": {
+    "staffTitle": "Invitación de staff",
+    "staffBody": "{organizer} te invitó a validar la entrada en {event}.",
+    "teamTitle": "Invitación a un equipo",
+    "teamBody": "{inviter} te invitó a unirte a {organization} como {role}.",
+    "forEmail": "Esta invitación es para {email}.",
+    "signInToAccept": "Inicia sesión o crea una cuenta con ese correo para aceptarla.",
+    "wrongAccount": "Iniciaste sesión con otra cuenta. Cierra sesión y entra con {email} para aceptar.",
+    "accept": "Aceptar invitación",
+    "reject": "Rechazar",
+    "staffAccepted": "¡Listo! Ya eres staff de {event}.",
+    "teamAccepted": "¡Listo! Ya eres parte de {organization}.",
+    "rejected": "Rechazaste la invitación.",
+    "states": {
+      "accepted": "Esta invitación ya se aceptó.",
+      "expired": "Esta invitación expiró. Pide una nueva.",
+      "revoked": "Esta invitación se canceló."
+    },
+    "notFound": "La invitación no existe, ya no está vigente o no es para tu cuenta.",
+    "goToDashboard": "Ir a mi panel"
+  },
+  "team": {
+    "title": "Equipo",
+    "organization": "Organización",
+    "switch": "Usar esta organización",
+    "personal": "Personal",
+    "members": "Miembros",
+    "role": "Rol",
+    "roles": {
+      "owner": "Propietario",
+      "admin": "Administrador",
+      "member": "Organizador"
+    },
+    "roleHints": {
+      "owner": "Control total de la organización.",
+      "admin": "Gestiona eventos y miembros.",
+      "member": "Crea y gestiona eventos."
+    },
+    "you": "(tú)",
+    "invite": "Invitar a alguien",
+    "inviteEmail": "Correo",
+    "inviteRole": "Rol",
+    "inviteSubmit": "Enviar invitación",
+    "invited": "Invitación enviada a {email}.",
+    "pending": "Invitaciones pendientes",
+    "cancelInvitation": "Cancelar",
+    "remove": "Quitar",
+    "removeConfirm": "¿Quitar a {name} de la organización?",
+    "makeRole": "Cambiar rol",
+    "leave": "Salir de la organización",
+    "leaveConfirm": "¿Salir de {organization}? Perderás acceso a sus eventos.",
+    "newOrganization": "Crear organización",
+    "newOrganizationName": "Nombre de la organización",
+    "create": "Crear",
+    "created": "Organización creada y seleccionada.",
+    "onlyAdmins": "Solo propietarios y administradores pueden invitar o quitar miembros."
   }
 }
