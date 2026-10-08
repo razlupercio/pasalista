@@ -2,3 +2,4 @@
 export * from "./auth.ts";
 export * from "./email.ts";
 export * from "./events.ts";
+export * from "./staff.ts";
