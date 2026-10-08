@@ -1,0 +1,38 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# builds
+.next/
+dist/
+build/
+.turbo/
+coverage/
+out/
+
+# env / secrets (keep .env.example only)
+.env
+.env.*
+!.env.example
+
+# logs and OS
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# editors
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# test artifacts
+playwright-report/
+test-results/
+
+# local data
+*.sqlite
+pgdata/
+
+# Claude Code local overrides
+.claude/settings.local.json
