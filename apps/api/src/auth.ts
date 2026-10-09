@@ -129,6 +129,7 @@ export function createAuth(options: { db: Database; env: Env }) {
         // Read-only session lookups are also made server-side by Next.js on every page render.
         "/get-session": false,
         "/organization/get-full-organization": false,
+        "/organization/list": false,
       },
     },
     databaseHooks: {
