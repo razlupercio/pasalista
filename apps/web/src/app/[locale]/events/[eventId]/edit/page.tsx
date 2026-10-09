@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { CardTitle } from "@/components/ui/card.tsx";
-import { Link } from "@/i18n/navigation.ts";
+import { Link, redirect } from "@/i18n/navigation.ts";
 import { toLocale } from "@/i18n/routing.ts";
 import { serverApi } from "@/lib/api-server.ts";
 import { timeZoneOptions } from "@/lib/dates.ts";
@@ -30,6 +30,8 @@ export default async function EditEventPage({
     params: { path: { eventId } },
   });
   if (!event) notFound();
+  // Purged events are read-only (ADR-0011).
+  if (event.purgedAt) return redirect({ href: `/events/${event.id}`, locale });
   const [t, tCommon] = await Promise.all([
     getTranslations("events.form"),
     getTranslations("common"),

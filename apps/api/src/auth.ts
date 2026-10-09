@@ -9,7 +9,7 @@ import {
 import { schema, type Database } from "@pasalista/db";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { magicLink, organization } from "better-auth/plugins";
+import { haveIBeenPwned, magicLink, organization } from "better-auth/plugins";
 import { asc, eq } from "drizzle-orm";
 import { enqueueEmail } from "./email/outbox.ts";
 import type { Env } from "./env.ts";
@@ -125,6 +125,9 @@ export function createAuth(options: { db: Database; env: Env }) {
         "/sign-up/email": { window: 60, max: 5 },
         "/sign-in/magic-link": { window: 60, max: 3 },
         "/request-password-reset": { window: 60, max: 3 },
+        "/reset-password": { window: 60, max: 5 },
+        // Verifies the current password: a stolen session must not allow guessing it.
+        "/change-password": { window: 60, max: 5 },
         "/send-verification-email": { window: 60, max: 3 },
         // Read-only session lookups are also made server-side by Next.js on every page render.
         "/get-session": false,
@@ -155,6 +158,7 @@ export function createAuth(options: { db: Database; env: Env }) {
       },
     },
     plugins: [
+      haveIBeenPwned({ enabled: env.PASSWORD_BREACH_CHECK }),
       organization({
         creatorRole: "owner",
         organizationLimit: 20,

@@ -86,7 +86,8 @@
       "nameRequired": "Enter your name.",
       "linkInvalid": "This link is not valid or has expired. Request a new one.",
       "rateLimited": "Too many attempts. Wait a moment and try again.",
-      "generic": "Something went wrong. Please try again."
+      "generic": "Something went wrong. Please try again.",
+      "passwordCompromised": "This password appeared in a data breach. Choose a different one."
     }
   },
   "dashboard": {
@@ -100,7 +101,10 @@
     "staffEventsHint": "You will check people in at these events with the scanner (coming in the next phase).",
     "team": "Team",
     "activeOrganization": "Active organization",
-    "scan": "Scan"
+    "scan": "Scan",
+    "purgeReminder": "{count, plural, one {# event ended more than 90 days ago and still has attendee data.} other {# events ended more than 90 days ago and still have attendee data.}} Open each one to review and delete that data.",
+    "purgeDue": "Attendee data pending review",
+    "dataPurged": "Attendee data deleted"
   },
   "events": {
     "status": {
@@ -170,7 +174,8 @@
       "rotateKeyHint": "New tickets are signed with a new key. Tickets already issued stay valid.",
       "rotateKeyDone": "Active signing key: version {version}.",
       "openScanner": "Open scanner",
-      "exportCsv": "Export CSV"
+      "exportCsv": "Export CSV",
+      "purged": "Attendee data was deleted on {date}. Final totals: {registered} registered, {checkedIn} checked in."
     },
     "attendees": {
       "title": "Attendees",
@@ -280,6 +285,14 @@
       "offlineDuplicatesHint": "The same person was checked in on two offline devices. The earliest check-in was kept.",
       "kept": "kept {time}",
       "duplicate": "duplicate {time}"
+    },
+    "purge": {
+      "title": "Delete attendee data",
+      "reminder": "This event ended more than 90 days ago. If you no longer need its guest list, delete it.",
+      "hint": "Permanently deletes guests, tickets, check-ins, scan history, staff and pending emails for this event. Only the event details and its totals remain. This cannot be undone. Only owners and admins can do it.",
+      "closeFirst": "Close registration before deleting this event's data.",
+      "confirmLabel": "Type {slug} to confirm",
+      "submit": "Delete data permanently"
     }
   },
   "publicEvent": {

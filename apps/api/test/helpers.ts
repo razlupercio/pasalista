@@ -18,6 +18,8 @@ export function createTestContext(overrides: Record<string, string> = {}) {
     TRUSTED_PROXY_HOPS: "1",
     LOG_LEVEL: "silent",
     EMAIL_WORKER_ENABLED: "false",
+    // No network calls from tests.
+    PASSWORD_BREACH_CHECK: "false",
     ...overrides,
   });
   const { db, pool } = createDb(env.DATABASE_URL, { max: 5 });

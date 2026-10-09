@@ -11,7 +11,7 @@ const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
-  // Script/style CSP with nonces arrives in Phase 5 (ROADMAP.md); these directives are safe now.
+  // Pages get a full nonce-based policy from src/proxy.ts; this baseline covers everything else.
   {
     key: "Content-Security-Policy",
     value: "frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'",

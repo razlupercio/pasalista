@@ -2,7 +2,7 @@
 import { expect, type Page, type TestInfo } from "@playwright/test";
 import { latestLinkFor } from "./mailpit.ts";
 
-export const PASSWORD = "correct horse battery staple";
+export const PASSWORD = "pasalista e2e velero-mango-7f3k";
 
 export function uniqueEmail(testInfo: Pick<TestInfo, "project">, label = "e2e"): string {
   const random = Math.random().toString(36).slice(2, 8);

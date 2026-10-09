@@ -44,6 +44,10 @@ export const events = pgTable(
     registrationFields: jsonb().$type<RegistrationField[]>().notNull().default([]),
     status: eventStatus().notNull().default("draft"),
     createdBy: uuid().references(() => users.id, { onDelete: "set null" }),
+    /** Personal data purged (ADR-0011); only these totals remain. */
+    purgedAt: timestamp({ withTimezone: true }),
+    finalRegisteredCount: integer(),
+    finalCheckedInCount: integer(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },

@@ -7,14 +7,14 @@ import {
   type EventUpdate,
 } from "@pasalista/core";
 import { schema } from "@pasalista/db";
-import { and, asc, count, desc, eq } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray } from "drizzle-orm";
 import { randomBytes } from "node:crypto";
 import { ApiError } from "../errors.ts";
 import { nowOf, type Executor, type ServiceDeps } from "./context.ts";
 import { audit } from "./audit.ts";
 import { createSigningKey, rotateSigningKey } from "./signing-keys.ts";
 
-const { events, attendees, organizationMembers } = schema;
+const { events, attendees, checkIns, organizationMembers } = schema;
 
 type EventRow = typeof events.$inferSelect;
 
@@ -33,7 +33,16 @@ export function makeSlug(name: string): string {
   return base ? `${base}-${suffix}` : suffix;
 }
 
-export function toEventDto(row: EventRow, registeredCount: number): Event {
+export interface EventCounts {
+  registered: number;
+  checkedIn: number;
+}
+
+/** Purged events keep only their final totals (ADR-0011). */
+export function toEventDto(row: EventRow, live: EventCounts): Event {
+  const counts = row.purgedAt
+    ? { registered: row.finalRegisteredCount ?? 0, checkedIn: row.finalCheckedInCount ?? 0 }
+    : live;
   return {
     id: row.id,
     organizationId: row.organizationId,
@@ -50,7 +59,9 @@ export function toEventDto(row: EventRow, registeredCount: number): Event {
     registrationDeadline: row.registrationDeadline?.toISOString() ?? null,
     registrationFields: row.registrationFields,
     status: row.status,
-    registeredCount,
+    registeredCount: counts.registered,
+    checkedInCount: counts.checkedIn,
+    purgedAt: row.purgedAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -76,6 +87,36 @@ export async function countActiveAttendees(db: Executor, eventId: string): Promi
     .from(attendees)
     .where(and(eq(attendees.eventId, eventId), eq(attendees.status, "active")));
   return row?.value ?? 0;
+}
+
+/** Registered (active) and checked-in totals for several events at once. */
+export async function eventCounts(
+  db: Executor,
+  eventIds: string[],
+): Promise<Map<string, EventCounts>> {
+  const result = new Map<string, EventCounts>(
+    eventIds.map((id) => [id, { registered: 0, checkedIn: 0 }]),
+  );
+  if (eventIds.length === 0) return result;
+  const [registered, checkedIn] = await Promise.all([
+    db
+      .select({ eventId: attendees.eventId, value: count() })
+      .from(attendees)
+      .where(and(inArray(attendees.eventId, eventIds), eq(attendees.status, "active")))
+      .groupBy(attendees.eventId),
+    db
+      .select({ eventId: checkIns.eventId, value: count() })
+      .from(checkIns)
+      .where(inArray(checkIns.eventId, eventIds))
+      .groupBy(checkIns.eventId),
+  ]);
+  for (const row of registered) result.get(row.eventId)!.registered = row.value;
+  for (const row of checkedIn) result.get(row.eventId)!.checkedIn = row.value;
+  return result;
+}
+
+async function countsFor(db: Executor, eventId: string): Promise<EventCounts> {
+  return (await eventCounts(db, [eventId])).get(eventId)!;
 }
 
 /**
@@ -124,15 +165,22 @@ export async function findManagedEvent(
   return row.event;
 }
 
+/** Purged events are read-only (ADR-0011). */
+export function assertNotPurged(event: Pick<EventRow, "purgedAt">): void {
+  if (event.purgedAt) throw new ApiError(409, "invalid_state", "The event data was purged");
+}
+
 export async function listEvents(db: Executor, organizationId: string): Promise<Event[]> {
   const rows = await db
-    .select({ event: events, registeredCount: count(attendees.id) })
+    .select()
     .from(events)
-    .leftJoin(attendees, and(eq(attendees.eventId, events.id), eq(attendees.status, "active")))
     .where(eq(events.organizationId, organizationId))
-    .groupBy(events.id)
     .orderBy(desc(events.startsAt));
-  return rows.map((r) => toEventDto(r.event, r.registeredCount));
+  const counts = await eventCounts(
+    db,
+    rows.map((r) => r.id),
+  );
+  return rows.map((row) => toEventDto(row, counts.get(row.id)!));
 }
 
 export async function createEvent(
@@ -157,13 +205,13 @@ export async function createEvent(
       .returning();
     if (!row) throw new Error("Insert failed");
     await createSigningKey(tx, deps.kek, row.id, 1);
-    return toEventDto(row, 0);
+    return toEventDto(row, { registered: 0, checkedIn: 0 });
   });
 }
 
 export async function getEvent(deps: ServiceDeps, userId: string, eventId: string): Promise<Event> {
   const row = await findManagedEvent(deps.db, userId, eventId);
-  return toEventDto(row, await countActiveAttendees(deps.db, row.id));
+  return toEventDto(row, await countsFor(deps.db, row.id));
 }
 
 export async function updateEvent(
@@ -174,6 +222,7 @@ export async function updateEvent(
 ): Promise<Event> {
   return deps.db.transaction(async (tx) => {
     const current = await findManagedEvent(tx, userId, eventId, { forUpdate: true });
+    assertNotPurged(current);
     const merged = {
       startsAt: patch.startsAt ?? current.startsAt.toISOString(),
       endsAt: patch.endsAt !== undefined ? patch.endsAt : (current.endsAt?.toISOString() ?? null),
@@ -190,7 +239,7 @@ export async function updateEvent(
       .set(toColumns(patch))
       .where(eq(events.id, eventId))
       .returning();
-    return toEventDto(row!, await countActiveAttendees(tx, eventId));
+    return toEventDto(row!, await countsFor(tx, eventId));
   });
 }
 
@@ -207,6 +256,7 @@ export async function changeEventStatus(
 ): Promise<Event> {
   return deps.db.transaction(async (tx) => {
     const current = await findManagedEvent(tx, userId, eventId, { forUpdate: true });
+    assertNotPurged(current);
     const { from, to } = transitions[action];
     if (!from.includes(current.status)) {
       throw new ApiError(
@@ -228,7 +278,7 @@ export async function changeEventStatus(
       entityType: "event",
       entityId: eventId,
     });
-    return toEventDto(row!, await countActiveAttendees(tx, eventId));
+    return toEventDto(row!, await countsFor(tx, eventId));
   });
 }
 
@@ -260,6 +310,7 @@ export async function rotateEventKey(
 ): Promise<number> {
   return deps.db.transaction(async (tx) => {
     const event = await findManagedEvent(tx, userId, eventId, { forUpdate: true });
+    assertNotPurged(event);
     const version = await rotateSigningKey(tx, deps.kek, eventId);
     await audit(tx, {
       organizationId: event.organizationId,

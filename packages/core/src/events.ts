@@ -112,10 +112,31 @@ export const eventSchema = z.object({
   ...eventFields,
   status: z.enum(eventStatuses),
   registeredCount: z.number().int(),
+  /** Set once personal data was purged; the counts below are then final. */
+  purgedAt: instantSchema.nullable(),
+  checkedInCount: z.number().int(),
   createdAt: instantSchema,
   updatedAt: instantSchema,
 });
+
+export const purgeEventInputSchema = z.object({
+  /** The organizer types the event slug to confirm an irreversible purge. */
+  confirmSlug: z.string().min(1).max(64),
+});
 export type Event = z.infer<typeof eventSchema>;
+
+/** Days after an event ends before organizers are reminded to purge its data (ADR-0011). */
+export const PURGE_REMINDER_DAYS = 90;
+
+/** Whether an event's personal data is due for a purge reminder. Retention is manual only. */
+export function purgeReminderDue(
+  event: Pick<Event, "startsAt" | "endsAt" | "purgedAt">,
+  now: Date,
+): boolean {
+  if (event.purgedAt) return false;
+  const end = new Date(event.endsAt ?? event.startsAt).getTime();
+  return now.getTime() - end > PURGE_REMINDER_DAYS * 24 * 60 * 60 * 1000;
+}
 
 /** Why a public registration form is not accepting submissions right now. */
 export const registrationStates = [

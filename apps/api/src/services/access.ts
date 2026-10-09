@@ -10,7 +10,7 @@ export type ScanRole = "organizer" | "staff";
 
 /**
  * Loads an event the user may scan for: members of the owning organization (organizers) and
- * staff assigned to the event. Everyone else gets 404.
+ * staff assigned to the event. Everyone else, and everyone once the event was purged, gets 404.
  */
 export async function findScannableEvent(
   db: Executor,
@@ -30,5 +30,7 @@ export async function findScannableEvent(
     .leftJoin(eventStaff, and(eq(eventStaff.eventId, events.id), eq(eventStaff.userId, userId)))
     .where(eq(events.id, eventId));
   if (!row || (!row.memberId && !row.staffUserId)) throw new ApiError(404, "not_found");
+  // Nothing left to scan after a purge; offline devices drop their copy on 404 (ADR-0011).
+  if (row.event.purgedAt) throw new ApiError(404, "not_found");
   return { event: row.event, role: row.memberId ? "organizer" : "staff" };
 }

@@ -2,7 +2,7 @@
 import { expect, test } from "@playwright/test";
 import { latestLinkFor } from "./mailpit.ts";
 
-const PASSWORD = "correct horse battery staple";
+const PASSWORD = "pasalista e2e velero-mango-7f3k";
 
 // Each test acts as a different client so per-IP rate limits do not interfere. The stack must
 // run with TRUSTED_PROXY_HOPS=1 for the API to honour this header (see README).
@@ -65,6 +65,18 @@ test("sign in is refused until the email is verified (en)", async ({ page }, tes
     "Your email is not verified yet.",
   );
   await expect(page.getByRole("button", { name: "Resend verification email" })).toBeVisible();
+});
+
+test("passwords found in data breaches are rejected", async ({ page }, testInfo) => {
+  test.skip(process.env.PASSWORD_BREACH_CHECK === "false", "Breach check disabled for this stack");
+  await page.goto("/es-MX/sign-up");
+  await page.getByLabel("Nombre").fill("Ana López");
+  await page.getByLabel("Correo electrónico").fill(uniqueEmail(testInfo));
+  await page.getByLabel("Contraseña").fill("password1234");
+  await page.getByRole("button", { name: "Crear cuenta" }).click();
+  await expect(page.locator("form").getByRole("alert")).toHaveText(
+    "Esta contraseña apareció en una filtración de datos. Elige otra.",
+  );
 });
 
 test("protected pages redirect to sign in", async ({ page }) => {

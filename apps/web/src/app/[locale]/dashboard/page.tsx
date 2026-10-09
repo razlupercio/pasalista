@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import { purgeReminderDue } from "@pasalista/core";
 import type { Metadata } from "next";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 import { EventStatusBadge } from "@/components/event-status-badge.tsx";
 import { buttonVariants } from "@/components/ui/button.tsx";
+import { Alert } from "@/components/ui/alert.tsx";
 import { Card, CardTitle } from "@/components/ui/card.tsx";
 import { Link, redirect } from "@/i18n/navigation.ts";
 import { toLocale } from "@/i18n/routing.ts";
@@ -45,6 +47,8 @@ export default async function DashboardPage({
   ]);
   const list = events.data ?? [];
   const assigned = staffEvents.data ?? [];
+  const now = new Date();
+  const purgeDue = new Set(list.filter((e) => purgeReminderDue(e, now)).map((e) => e.id));
 
   return (
     <div className="flex flex-col gap-6">
@@ -74,6 +78,8 @@ export default async function DashboardPage({
             {t("newEvent")}
           </Link>
         </div>
+
+        {purgeDue.size > 0 ? <Alert>{t("purgeReminder", { count: purgeDue.size })}</Alert> : null}
 
         {list.length === 0 ? (
           <Card>
@@ -105,6 +111,11 @@ export default async function DashboardPage({
                         })
                       : tEvents("registeredCount", { count: event.registeredCount })}
                   </span>
+                  {event.purgedAt ? (
+                    <span className="text-sm text-muted-foreground">{t("dataPurged")}</span>
+                  ) : purgeDue.has(event.id) ? (
+                    <span className="text-sm font-medium">{t("purgeDue")}</span>
+                  ) : null}
                 </Link>
               </li>
             ))}
