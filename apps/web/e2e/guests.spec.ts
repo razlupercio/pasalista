@@ -60,7 +60,9 @@ test("closed list: add a guest, import a CSV, send invitations, guest gets the Q
   const { subject, link } = await latestLinkFor(csvGuest);
   expect(subject).toBe("Your ticket for Gala privada");
   await page.goto(link);
-  await expect(page.getByRole("img", { name: "QR code of your ticket for Gala privada" })).toBeVisible();
+  await expect(
+    page.getByRole("img", { name: "QR code of your ticket for Gala privada" }),
+  ).toBeVisible();
 });
 
 test("staff invitation: the invitee signs up from the link and sees the event", async ({
@@ -105,7 +107,10 @@ test("staff invitation: the invitee signs up from the link and sees the event", 
   await expect(page.getByText("Staff activo")).toBeVisible();
 });
 
-test("team: a co-organizer joins and sees the organization's events", async ({ page, browser }, testInfo) => {
+test("team: a co-organizer joins and sees the organization's events", async ({
+  page,
+  browser,
+}, testInfo) => {
   await signUpOrganizer(page, uniqueEmail(testInfo, "owner"), "Dueña Equipo");
   await createPublishedClosedEvent(page, "Evento del equipo");
 

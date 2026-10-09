@@ -63,6 +63,8 @@ and opens the ticket page; registration past capacity or deadline is rejected.
 - Teams: create organizations, organization switcher, invite co-organizers by email with a
   role (owner, admin, member), members page, leave/remove member.
 - Attendee list with filters, resend ticket.
+- Decided during Phase 3 (ADR-0008): explicit "Send invitations" step; CSV columns name, email
+  and optional language; 2,000 rows per file; invitations only accepted by the invited email.
 
 Acceptance: importing a 1,000-row CSV queues 1,000 emails without blocking the request;
 invalid rows are reported; an uninvited registration is rejected; an invited co-organizer
