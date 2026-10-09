@@ -12,6 +12,7 @@
   "include": [
     "next-env.d.ts",
     "src",
+    "scripts",
     "e2e",
     "next.config.ts",
     "playwright.config.ts",

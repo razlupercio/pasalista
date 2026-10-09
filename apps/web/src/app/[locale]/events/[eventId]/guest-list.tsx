@@ -8,7 +8,7 @@ import {
   type AttendeeListQuery,
   type EventStatus,
 } from "@pasalista/core";
-import { useLocale, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useState, type FormEvent } from "react";
 import { FormField } from "@/components/form-field.tsx";
 import { Alert } from "@/components/ui/alert.tsx";
@@ -22,8 +22,8 @@ import { useHydrated } from "@/lib/use-hydrated.ts";
 import { formText } from "@/lib/utils.ts";
 
 const PAGE_SIZE = 50;
-type Filters = Pick<AttendeeListQuery, "q" | "status" | "ticket">;
-type Action = "reissue" | "resend" | "revoke" | "cancel";
+type Filters = Pick<AttendeeListQuery, "q" | "status" | "ticket" | "checkedIn">;
+type Action = "reissue" | "resend" | "revoke" | "cancel" | "undoCheckIn";
 
 const endpoints = {
   reissue: "/api/v1/attendees/{attendeeId}/ticket/reissue",
@@ -87,9 +87,14 @@ export function GuestList({
     if (needsConfirm && !window.confirm(t(`${action}Confirm`))) return;
     setBusy(true);
     setNotice(null);
-    const { error } = await browserApi.POST(endpoints[action], {
-      params: { path: { attendeeId: attendee.id } },
-    });
+    const { error } =
+      action === "undoCheckIn"
+        ? await browserApi.DELETE("/api/v1/events/{eventId}/check-ins/{attendeeId}", {
+            params: { path: { eventId, attendeeId: attendee.id } },
+          })
+        : await browserApi.POST(endpoints[action], {
+            params: { path: { attendeeId: attendee.id } },
+          });
     setBusy(false);
     if (error) return setNotice({ tone: "error", text: tApi(apiErrorKey(error)) });
     await refresh(t("done"));
@@ -138,7 +143,7 @@ export function GuestList({
   }
 
   const disabled = !hydrated || busy;
-  const filtered = Boolean(filters.q || filters.status || filters.ticket);
+  const filtered = Boolean(filters.q || filters.status || filters.ticket || filters.checkedIn);
 
   return (
     <div className="flex flex-col gap-4">
@@ -191,7 +196,7 @@ export function GuestList({
 
       <form
         role="search"
-        className="grid gap-3 sm:grid-cols-[1fr_auto_auto]"
+        className="grid gap-3 sm:grid-cols-[1fr_auto_auto_auto]"
         onSubmit={(e) => {
           e.preventDefault();
           applyFilters({ q: formText(new FormData(e.currentTarget), "q").trim() });
@@ -232,20 +237,36 @@ export function GuestList({
             ))}
           </Select>
         </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="filter-checked-in">{t("filterCheckedIn")}</Label>
+          <Select
+            id="filter-checked-in"
+            value={filters.checkedIn ?? ""}
+            onChange={(e) =>
+              applyFilters({ checkedIn: (e.target.value || undefined) as Filters["checkedIn"] })
+            }
+          >
+            <option value="">{tCommon("all")}</option>
+            <option value="yes">{t("checkedInYes")}</option>
+            <option value="no">{t("checkedInNo")}</option>
+          </Select>
+        </div>
       </form>
 
       {data.items.length === 0 ? (
         <p className="text-muted-foreground">{filtered ? t("noResults") : t("empty")}</p>
       ) : (
         <div className="overflow-x-auto rounded-lg border" aria-busy={busy}>
-          <table className="w-full min-w-[44rem] text-left text-sm">
+          <table className="w-full min-w-[52rem] text-left text-sm">
             <thead className="border-b bg-muted/50">
               <tr>
-                {(["name", "email", "status", "ticket", "actions"] as const).map((column) => (
-                  <th key={column} scope="col" className="px-3 py-2 font-medium">
-                    {t(column)}
-                  </th>
-                ))}
+                {(["name", "email", "status", "ticket", "checkedIn", "actions"] as const).map(
+                  (column) => (
+                    <th key={column} scope="col" className="px-3 py-2 font-medium">
+                      {t(column)}
+                    </th>
+                  ),
+                )}
               </tr>
             </thead>
             <tbody>
@@ -288,6 +309,7 @@ function GuestRow({
   onAction: (attendee: Attendee, action: Action) => void;
 }) {
   const t = useTranslations("events.attendees");
+  const format = useFormatter();
   const active = attendee.status === "active";
   const ticket = attendee.ticketStatus;
   const small = "min-h-9 px-3";
@@ -298,6 +320,11 @@ function GuestRow({
       <td className="px-3 py-2 break-all">{attendee.email}</td>
       <td className="px-3 py-2">{t(`statuses.${attendee.status}`)}</td>
       <td className="px-3 py-2">{t(`ticketStatuses.${ticket ?? "pending"}`)}</td>
+      <td className="px-3 py-2">
+        {attendee.checkedInAt
+          ? format.dateTime(new Date(attendee.checkedInAt), { timeStyle: "short" })
+          : "—"}
+      </td>
       <td className="px-3 py-2">
         {active ? (
           <div className="flex flex-wrap gap-2">
@@ -339,6 +366,16 @@ function GuestRow({
                 onClick={() => onAction(attendee, "reissue")}
               >
                 {t("reissue")}
+              </Button>
+            ) : null}
+            {attendee.checkedInAt ? (
+              <Button
+                variant="outline"
+                className={small}
+                disabled={disabled}
+                onClick={() => onAction(attendee, "undoCheckIn")}
+              >
+                {t("undoCheckIn")}
               </Button>
             ) : null}
             <Button
