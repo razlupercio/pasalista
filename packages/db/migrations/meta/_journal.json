@@ -22,6 +22,13 @@
       "when": 1791501732043,
       "tag": "0002_staff_and_guest_invitations",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791517408395,
+      "tag": "0003_checkins_and_audit",
+      "breakpoints": true
     }
   ]
 }
