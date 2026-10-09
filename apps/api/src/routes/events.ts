@@ -37,7 +37,9 @@ import {
   sendPendingInvitations,
 } from "../services/guests.ts";
 import { getStaff, inviteStaff, removeStaff, revokeStaffInvitation } from "../services/staff.ts";
+import type { RateLimitStore } from "../middleware/rate-limit.ts";
 import type { AuthedEnv } from "../types.ts";
+import { registerCheckInRoutes } from "./checkins.ts";
 import { pickErrors, validationHook } from "./openapi.ts";
 
 const tags = ["events"];
@@ -208,9 +210,14 @@ const routes = {
   }),
 };
 
-export function eventRoutes(deps: ServiceDeps, auth: Auth) {
+export function eventRoutes(
+  deps: ServiceDeps,
+  auth: Auth,
+  rateLimits: { store: RateLimitStore; enabled: boolean },
+) {
   const app = new OpenAPIHono<AuthedEnv>({ defaultHook: validationHook });
   app.use("*", requireUser(auth));
+  registerCheckInRoutes(app, deps, rateLimits);
   const userId = (c: { get(key: "user"): { id: string } }) => c.get("user").id;
 
   return app

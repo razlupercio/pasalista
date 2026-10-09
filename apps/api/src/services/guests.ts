@@ -10,14 +10,27 @@ import {
   type ImportRequest,
 } from "@pasalista/core";
 import { schema } from "@pasalista/db";
-import { and, asc, count, desc, eq, ilike, inArray, or, type SQL } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  ilike,
+  inArray,
+  isNotNull,
+  isNull,
+  or,
+  type SQL,
+} from "drizzle-orm";
 import { newAccessToken } from "../crypto/key-encryption.ts";
 import { ApiError } from "../errors.ts";
 import { nowOf, type ServiceDeps, type Transaction } from "./context.ts";
 import { countActiveAttendees, findManagedEvent } from "./events.ts";
+import { audit, type AuditAction } from "./audit.ts";
 import { issueTickets, resendTicketEmail } from "./ticket-issuer.ts";
 
-const { attendees, tickets } = schema;
+const { attendees, checkIns, tickets } = schema;
 
 type EventRow = typeof schema.events.$inferSelect;
 
@@ -62,13 +75,16 @@ export async function listGuests(
   if (query.status) filters.push(eq(attendees.status, query.status));
   if (query.ticket === "pending") filters.push(eq(attendees.invitationPending, true));
   else if (query.ticket) filters.push(eq(latest.status, query.ticket));
+  if (query.checkedIn === "yes") filters.push(isNotNull(checkIns.id));
+  if (query.checkedIn === "no") filters.push(isNull(checkIns.id));
   const where = and(...filters);
 
   const [rows, [totals], [pending]] = await Promise.all([
     deps.db
-      .select({ attendee: attendees, ticketStatus: latest.status })
+      .select({ attendee: attendees, ticketStatus: latest.status, checkedInAt: checkIns.scannedAt })
       .from(attendees)
       .leftJoin(latest, eq(latest.attendeeId, attendees.id))
+      .leftJoin(checkIns, eq(checkIns.attendeeId, attendees.id))
       .where(where)
       .orderBy(asc(attendees.createdAt), asc(attendees.id))
       .limit(query.limit)
@@ -77,6 +93,7 @@ export async function listGuests(
       .select({ value: count() })
       .from(attendees)
       .leftJoin(latest, eq(latest.attendeeId, attendees.id))
+      .leftJoin(checkIns, eq(checkIns.attendeeId, attendees.id))
       .where(where),
     deps.db
       .select({ value: count() })
@@ -91,7 +108,7 @@ export async function listGuests(
   ]);
 
   return {
-    items: rows.map(({ attendee, ticketStatus }): Attendee => ({
+    items: rows.map(({ attendee, ticketStatus, checkedInAt }): Attendee => ({
       id: attendee.id,
       name: attendee.name,
       email: attendee.email,
@@ -99,6 +116,7 @@ export async function listGuests(
       source: attendee.source,
       answers: attendee.answers,
       ticketStatus: attendee.invitationPending ? null : (ticketStatus ?? null),
+      checkedInAt: checkedInAt?.toISOString() ?? null,
       createdAt: attendee.createdAt.toISOString(),
     })),
     total: totals?.value ?? 0,
@@ -174,6 +192,14 @@ export async function addGuest(
     const event = await findManagedEvent(tx, userId, eventId, { forUpdate: true });
     const { alreadyOnList } = await addGuests(deps, tx, event, [guest], "manual");
     if (alreadyOnList.length > 0) throw new ApiError(409, "already_registered");
+    await audit(tx, {
+      organizationId: event.organizationId,
+      actorUserId: userId,
+      eventId,
+      action: "guests.add",
+      entityType: "event",
+      entityId: eventId,
+    });
   });
 }
 
@@ -195,6 +221,15 @@ export async function importGuests(
         problem: "already_on_list" as const,
       })),
     ].sort((a, b) => a.line - b.line);
+    await audit(tx, {
+      organizationId: event.organizationId,
+      actorUserId: userId,
+      eventId,
+      action: "guests.import",
+      entityType: "event",
+      entityId: eventId,
+      metadata: { added, skipped: skipped.length },
+    });
     return { added, skipped };
   });
 }
@@ -224,11 +259,38 @@ export async function sendPendingInvitations(
       )
       .orderBy(asc(attendees.createdAt))
       .for("update");
-    return issueTickets(deps, tx, event, pending, "invitation");
+    const sent = await issueTickets(deps, tx, event, pending, "invitation");
+    await audit(tx, {
+      organizationId: event.organizationId,
+      actorUserId: userId,
+      eventId,
+      action: "invitations.send",
+      entityType: "event",
+      entityId: eventId,
+      metadata: { sent },
+    });
+    return sent;
   });
 }
 
 // --- Per-attendee actions ------------------------------------------------------------------
+
+function auditAttendee(
+  tx: Transaction,
+  event: { id: string; organizationId: string },
+  userId: string,
+  action: AuditAction,
+  attendeeId: string,
+) {
+  return audit(tx, {
+    organizationId: event.organizationId,
+    actorUserId: userId,
+    eventId: event.id,
+    action,
+    entityType: "attendee",
+    entityId: attendeeId,
+  });
+}
 
 async function findManagedAttendee(tx: Transaction, userId: string, attendeeId: string) {
   const [row] = await tx.select().from(attendees).where(eq(attendees.id, attendeeId)).for("update");
@@ -249,6 +311,7 @@ export async function reissueTicket(
       throw new ApiError(409, "invalid_state", "Attendee is cancelled");
     const variant = attendee.source === "open_registration" ? "registration" : "invitation";
     await issueTickets(deps, tx, event, [attendee], variant);
+    await auditAttendee(tx, event, userId, "ticket.reissue", attendee.id);
   });
 }
 
@@ -268,6 +331,7 @@ export async function resendTicket(
       throw new ApiError(409, "invalid_state", "No valid ticket to resend");
     }
     await resendTicketEmail(deps, tx, event, attendee, ticket);
+    await auditAttendee(tx, event, userId, "ticket.resend", attendee.id);
   });
 }
 
@@ -277,11 +341,12 @@ export async function revokeTicket(
   attendeeId: string,
 ): Promise<void> {
   await deps.db.transaction(async (tx) => {
-    await findManagedAttendee(tx, userId, attendeeId);
+    const { event } = await findManagedAttendee(tx, userId, attendeeId);
     await tx
       .update(tickets)
       .set({ status: "revoked", revokedAt: nowOf(deps), revokedReason: "revoked_by_organizer" })
       .where(and(eq(tickets.attendeeId, attendeeId), eq(tickets.status, "active")));
+    await auditAttendee(tx, event, userId, "ticket.revoke", attendeeId);
   });
 }
 
@@ -308,8 +373,9 @@ export async function cancelRegistration(
   attendeeId: string,
 ): Promise<void> {
   await deps.db.transaction(async (tx) => {
-    const { attendee } = await findManagedAttendee(tx, userId, attendeeId);
+    const { attendee, event } = await findManagedAttendee(tx, userId, attendeeId);
     if (attendee.status === "cancelled") return;
     await cancelAttendee(deps, tx, attendee.id, "cancelled_by_organizer");
+    await auditAttendee(tx, event, userId, "attendee.cancel", attendee.id);
   });
 }

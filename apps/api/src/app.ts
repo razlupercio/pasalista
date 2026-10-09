@@ -109,7 +109,10 @@ export function createApp(deps: AppDeps) {
     }),
   );
   api.route("/", healthRoutes({ db, version: env.APP_VERSION }));
-  api.route("/events", eventRoutes(services, auth));
+  api.route(
+    "/events",
+    eventRoutes(services, auth, { store: rateLimitStore, enabled: env.RATE_LIMIT_ENABLED }),
+  );
   api.route("/attendees", attendeeRoutes(services, auth));
   api.route(
     "/staff-invitations",

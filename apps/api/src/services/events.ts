@@ -11,6 +11,7 @@ import { and, asc, count, desc, eq } from "drizzle-orm";
 import { randomBytes } from "node:crypto";
 import { ApiError } from "../errors.ts";
 import { nowOf, type Executor, type ServiceDeps } from "./context.ts";
+import { audit } from "./audit.ts";
 import { createSigningKey, rotateSigningKey } from "./signing-keys.ts";
 
 const { events, attendees, organizationMembers } = schema;
@@ -219,6 +220,14 @@ export async function changeEventStatus(
       .set({ status: to })
       .where(eq(events.id, eventId))
       .returning();
+    await audit(tx, {
+      organizationId: current.organizationId,
+      actorUserId: userId,
+      eventId,
+      action: action === "publish" ? "event.publish" : "event.close",
+      entityType: "event",
+      entityId: eventId,
+    });
     return toEventDto(row!, await countActiveAttendees(tx, eventId));
   });
 }
@@ -233,6 +242,13 @@ export async function deleteDraftEvent(
     const current = await findManagedEvent(tx, userId, eventId, { forUpdate: true });
     if (current.status !== "draft")
       throw new ApiError(409, "invalid_state", "Only drafts can be deleted");
+    await audit(tx, {
+      organizationId: current.organizationId,
+      actorUserId: userId,
+      action: "event.delete",
+      entityType: "event",
+      entityId: eventId,
+    });
     await tx.delete(events).where(eq(events.id, eventId));
   });
 }
@@ -243,8 +259,18 @@ export async function rotateEventKey(
   eventId: string,
 ): Promise<number> {
   return deps.db.transaction(async (tx) => {
-    await findManagedEvent(tx, userId, eventId, { forUpdate: true });
-    return rotateSigningKey(tx, deps.kek, eventId);
+    const event = await findManagedEvent(tx, userId, eventId, { forUpdate: true });
+    const version = await rotateSigningKey(tx, deps.kek, eventId);
+    await audit(tx, {
+      organizationId: event.organizationId,
+      actorUserId: userId,
+      eventId,
+      action: "event.key_rotate",
+      entityType: "event",
+      entityId: eventId,
+      metadata: { version },
+    });
+    return version;
   });
 }
 

@@ -8,6 +8,7 @@ import { enqueueEmail } from "../email/outbox.ts";
 import { ApiError } from "../errors.ts";
 import { nowOf, type ServiceDeps } from "./context.ts";
 import { organizerName } from "./attendees.ts";
+import { audit } from "./audit.ts";
 import { findManagedEvent } from "./events.ts";
 
 const { eventStaff, events, organizations, staffInvitations, users } = schema;
@@ -103,6 +104,14 @@ export async function inviteStaff(
         url: `${deps.publicUrl}/${input.locale}/invitations/staff/${token.token}`,
       },
     });
+    await audit(tx, {
+      organizationId: event.organizationId,
+      actorUserId: inviter.id,
+      eventId,
+      action: "staff.invite",
+      entityType: "event",
+      entityId: eventId,
+    });
   });
 }
 
@@ -112,17 +121,29 @@ export async function revokeStaffInvitation(
   eventId: string,
   invitationId: string,
 ): Promise<void> {
-  await findManagedEvent(deps.db, userId, eventId);
-  await deps.db
-    .update(staffInvitations)
-    .set({ revokedAt: nowOf(deps) })
-    .where(
-      and(
-        eq(staffInvitations.id, invitationId),
-        eq(staffInvitations.eventId, eventId),
-        isNull(staffInvitations.acceptedAt),
-      ),
-    );
+  await deps.db.transaction(async (tx) => {
+    const event = await findManagedEvent(tx, userId, eventId);
+    const [revoked] = await tx
+      .update(staffInvitations)
+      .set({ revokedAt: nowOf(deps) })
+      .where(
+        and(
+          eq(staffInvitations.id, invitationId),
+          eq(staffInvitations.eventId, eventId),
+          isNull(staffInvitations.acceptedAt),
+        ),
+      )
+      .returning({ id: staffInvitations.id });
+    if (!revoked) return;
+    await audit(tx, {
+      organizationId: event.organizationId,
+      actorUserId: userId,
+      eventId,
+      action: "staff.invitation_revoke",
+      entityType: "staff_invitation",
+      entityId: invitationId,
+    });
+  });
 }
 
 export async function removeStaff(
@@ -131,10 +152,22 @@ export async function removeStaff(
   eventId: string,
   staffUserId: string,
 ): Promise<void> {
-  await findManagedEvent(deps.db, userId, eventId);
-  await deps.db
-    .delete(eventStaff)
-    .where(and(eq(eventStaff.eventId, eventId), eq(eventStaff.userId, staffUserId)));
+  await deps.db.transaction(async (tx) => {
+    const event = await findManagedEvent(tx, userId, eventId);
+    const [removed] = await tx
+      .delete(eventStaff)
+      .where(and(eq(eventStaff.eventId, eventId), eq(eventStaff.userId, staffUserId)))
+      .returning({ userId: eventStaff.userId });
+    if (!removed) return;
+    await audit(tx, {
+      organizationId: event.organizationId,
+      actorUserId: userId,
+      eventId,
+      action: "staff.remove",
+      entityType: "staff",
+      entityId: staffUserId,
+    });
+  });
 }
 
 async function findInvitation(deps: ServiceDeps, token: string) {
