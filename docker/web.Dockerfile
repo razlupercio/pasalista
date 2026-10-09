@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-FROM node:24-alpine AS build
+FROM node:25-alpine AS build
 
 RUN corepack enable
 WORKDIR /app
@@ -24,7 +24,7 @@ ARG API_INTERNAL_URL=http://api:3001
 ENV API_INTERNAL_URL=${API_INTERNAL_URL}
 RUN pnpm --filter @pasalista/web build
 
-FROM node:24-alpine AS runtime
+FROM node:25-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000 HOSTNAME=0.0.0.0
 
