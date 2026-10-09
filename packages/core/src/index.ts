@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import "./zod-config.ts";
 export * from "./auth.ts";
 export * from "./checkin.ts";
 export * from "./csv.ts";
