@@ -100,7 +100,10 @@
     "staffEventsHint": "Validarás la entrada en estos eventos con el escáner (disponible en la siguiente fase).",
     "team": "Equipo",
     "activeOrganization": "Organización activa",
-    "scan": "Escanear"
+    "scan": "Escanear",
+    "purgeReminder": "{count, plural, one {# evento terminó hace más de 90 días y aún guarda datos de asistentes.} other {# eventos terminaron hace más de 90 días y aún guardan datos de asistentes.}} Abre cada uno para revisarlos y eliminarlos.",
+    "purgeDue": "Datos de asistentes por revisar",
+    "dataPurged": "Datos de asistentes eliminados"
   },
   "events": {
     "status": {
@@ -170,7 +173,8 @@
       "rotateKeyHint": "Los boletos nuevos se firman con una llave nueva. Los boletos ya emitidos siguen siendo válidos.",
       "rotateKeyDone": "Llave de firma activa: versión {version}.",
       "openScanner": "Abrir escáner",
-      "exportCsv": "Exportar CSV"
+      "exportCsv": "Exportar CSV",
+      "purged": "Los datos de asistentes se eliminaron el {date}. Totales finales: {registered} registrados, {checkedIn} entradas."
     },
     "attendees": {
       "title": "Asistentes",
@@ -280,6 +284,14 @@
       "offlineDuplicatesHint": "La misma persona se registró en dos dispositivos sin conexión. Se conservó la entrada más antigua.",
       "kept": "conservada {time}",
       "duplicate": "duplicada {time}"
+    },
+    "purge": {
+      "title": "Eliminar datos de asistentes",
+      "reminder": "Este evento terminó hace más de 90 días. Si ya no necesitas su lista de invitados, elimínala.",
+      "hint": "Elimina para siempre invitados, boletos, entradas, historial de escaneos, staff y correos pendientes de este evento. Solo quedan los datos del evento y sus totales. No se puede deshacer. Solo propietarios y administradores pueden hacerlo.",
+      "closeFirst": "Cierra el registro antes de eliminar los datos de este evento.",
+      "confirmLabel": "Escribe {slug} para confirmar",
+      "submit": "Eliminar datos para siempre"
     }
   },
   "publicEvent": {

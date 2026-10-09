@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import { purgeReminderDue } from "@pasalista/core";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 import { EventStatusBadge } from "@/components/event-status-badge.tsx";
 import { buttonVariants } from "@/components/ui/button.tsx";
+import { Alert } from "@/components/ui/alert.tsx";
 import { Card, CardTitle } from "@/components/ui/card.tsx";
 import { Link } from "@/i18n/navigation.ts";
 import { toLocale } from "@/i18n/routing.ts";
@@ -14,6 +16,7 @@ import { GuestList } from "./guest-list.tsx";
 import { LiveStats } from "./live-stats.tsx";
 import { StaffPanel } from "./staff-panel.tsx";
 import { EventActions } from "./event-actions.tsx";
+import { PurgePanel } from "./purge-panel.tsx";
 
 export async function generateMetadata({
   params,
@@ -58,6 +61,7 @@ export default async function EventPage({
     requestOrigin(),
   ]);
   const publicUrl = `${origin}/${locale}/e/${event.slug}`;
+  const purged = event.purgedAt !== null;
 
   return (
     <div className="flex flex-col gap-6">
@@ -80,66 +84,86 @@ export default async function EventPage({
             {[event.venueName, event.venueAddress].filter(Boolean).join(", ")}
           </dd>
         </dl>
-        <p className="text-sm">
-          {event.capacity
-            ? tEvents("registeredOfCapacity", {
-                count: event.registeredCount,
-                capacity: event.capacity,
-              })
-            : tEvents("registeredCount", { count: event.registeredCount })}
-        </p>
-        <div className="flex flex-wrap gap-3">
-          {event.status !== "draft" ? (
-            <Link href={`/scan/${event.id}`} className={buttonVariants()}>
-              {t("openScanner")}
+        {purged ? (
+          <Alert>
+            {t("purged", {
+              date: format.dateTime(new Date(event.purgedAt!), { dateStyle: "long" }),
+              registered: event.registeredCount,
+              checkedIn: event.checkedInCount,
+            })}
+          </Alert>
+        ) : (
+          <p className="text-sm">
+            {event.capacity
+              ? tEvents("registeredOfCapacity", {
+                  count: event.registeredCount,
+                  capacity: event.capacity,
+                })
+              : tEvents("registeredCount", { count: event.registeredCount })}
+          </p>
+        )}
+        {purged ? null : (
+          <div className="flex flex-wrap gap-3">
+            {event.status !== "draft" ? (
+              <Link href={`/scan/${event.id}`} className={buttonVariants()}>
+                {t("openScanner")}
+              </Link>
+            ) : null}
+            <Link
+              href={`/events/${event.id}/edit`}
+              className={buttonVariants({ variant: "outline" })}
+            >
+              {t("edit")}
             </Link>
-          ) : null}
-          <Link
-            href={`/events/${event.id}/edit`}
-            className={buttonVariants({ variant: "outline" })}
-          >
-            {t("edit")}
-          </Link>
-          <a
-            href={`/api/v1/events/${event.id}/export.csv`}
-            download
-            className={buttonVariants({ variant: "outline" })}
-          >
-            {t("exportCsv")}
-          </a>
-        </div>
+            <a
+              href={`/api/v1/events/${event.id}/export.csv`}
+              download
+              className={buttonVariants({ variant: "outline" })}
+            >
+              {t("exportCsv")}
+            </a>
+          </div>
+        )}
       </div>
 
-      <Card className="flex flex-col gap-4">
-        <EventActions event={event} publicUrl={publicUrl} />
-      </Card>
+      {purged ? null : (
+        <>
+          <Card className="flex flex-col gap-4">
+            <EventActions event={event} publicUrl={publicUrl} />
+          </Card>
 
-      {stats && event.status !== "draft" ? (
-        <section aria-labelledby="stats-heading" className="flex flex-col gap-3">
-          <h2 id="stats-heading" className="text-xl font-semibold">
-            {tEvents("stats.title")}
-          </h2>
-          <LiveStats eventId={event.id} initial={stats} timeZone={event.timezone} />
-        </section>
-      ) : null}
+          {stats && event.status !== "draft" ? (
+            <section aria-labelledby="stats-heading" className="flex flex-col gap-3">
+              <h2 id="stats-heading" className="text-xl font-semibold">
+                {tEvents("stats.title")}
+              </h2>
+              <LiveStats eventId={event.id} initial={stats} timeZone={event.timezone} />
+            </section>
+          ) : null}
 
-      <section aria-labelledby="attendees-heading" className="flex flex-col gap-3">
-        <h2 id="attendees-heading" className="text-xl font-semibold">
-          {tEvents("attendees.title")}
-        </h2>
-        <GuestList
-          eventId={event.id}
-          eventStatus={event.status}
-          initial={attendees ?? { items: [], total: 0, pendingCount: 0 }}
-        />
-      </section>
+          <section aria-labelledby="attendees-heading" className="flex flex-col gap-3">
+            <h2 id="attendees-heading" className="text-xl font-semibold">
+              {tEvents("attendees.title")}
+            </h2>
+            <GuestList
+              eventId={event.id}
+              eventStatus={event.status}
+              initial={attendees ?? { items: [], total: 0, pendingCount: 0 }}
+            />
+          </section>
 
-      <section aria-labelledby="staff-heading" className="flex flex-col gap-3">
-        <h2 id="staff-heading" className="text-xl font-semibold">
-          {tEvents("staff.title")}
-        </h2>
-        <StaffPanel eventId={event.id} staff={staff ?? { members: [], invitations: [] }} />
-      </section>
+          <section aria-labelledby="staff-heading" className="flex flex-col gap-3">
+            <h2 id="staff-heading" className="text-xl font-semibold">
+              {tEvents("staff.title")}
+            </h2>
+            <StaffPanel eventId={event.id} staff={staff ?? { members: [], invitations: [] }} />
+          </section>
+
+          {event.status !== "draft" ? (
+            <PurgePanel event={event} reminderDue={purgeReminderDue(event, new Date())} />
+          ) : null}
+        </>
+      )}
     </div>
   );
 }
