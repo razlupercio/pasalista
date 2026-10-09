@@ -118,3 +118,16 @@ export function readGuestList(text: string): RawGuest[] | null {
     locale: columns.locale === null ? null : (cells[columns.locale] ?? "").trim() || null,
   }));
 }
+
+/**
+ * Serializes rows as RFC 4180 CSV (CRLF, quotes when needed) with a UTF-8 BOM so spreadsheet
+ * apps detect the encoding. Cells that a spreadsheet would run as a formula (`=`, `+`, `-`,
+ * `@`, tab, CR) are prefixed with `'` to prevent CSV injection.
+ */
+export function toCsv(rows: readonly (readonly string[])[]): string {
+  const cell = (raw: string) => {
+    const value = /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw;
+    return /[",\r\n;]/.test(value) ? `"${value.replaceAll('"', '""')}"` : value;
+  };
+  return "\uFEFF" + rows.map((row) => row.map(cell).join(",")).join("\r\n") + "\r\n";
+}

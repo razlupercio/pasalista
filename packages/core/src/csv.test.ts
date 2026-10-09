@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { describe, expect, it } from "vitest";
-import { detectDelimiter, mapGuestListColumns, parseCsv, readGuestList } from "./csv.ts";
+import { detectDelimiter, mapGuestListColumns, parseCsv, readGuestList, toCsv } from "./csv.ts";
 
 describe("parseCsv", () => {
   it("parses simple rows with CRLF or LF endings", () => {
@@ -63,5 +63,30 @@ describe("guest lists", () => {
 
   it("returns null when required columns are missing", () => {
     expect(readGuestList("phone\n123")).toBeNull();
+  });
+});
+
+describe("toCsv", () => {
+  it("quotes when needed, uses CRLF and starts with a BOM", () => {
+    expect(
+      toCsv([
+        ["name", "note"],
+        ["López, Ana", 'say "hi"'],
+      ]),
+    ).toBe('\uFEFFname,note\r\n"López, Ana","say ""hi"""\r\n');
+  });
+
+  it("neutralizes spreadsheet formulas", () => {
+    expect(toCsv([['=HYPERLINK("x")', "+1", "-2", "@cmd", "ok"]])).toBe(
+      '\uFEFF"\'=HYPERLINK(""x"")",\'+1,\'-2,\'@cmd,ok\r\n',
+    );
+  });
+
+  it("round-trips through parseCsv", () => {
+    const rows = [
+      ["a", "b,c"],
+      ["línea\nnueva", ""],
+    ];
+    expect(parseCsv(toCsv(rows).slice(1), ",")).toEqual(rows);
   });
 });

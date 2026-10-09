@@ -207,6 +207,8 @@ export const attendeeSchema = z.object({
   answers: z.record(z.string(), answerValueSchema),
   /** Latest ticket state; null when the invitation has not been sent yet. */
   ticketStatus: z.enum(ticketStatuses).nullable(),
+  /** When the attendee entered the event; null if not checked in. */
+  checkedInAt: z.iso.datetime({ offset: true }).nullable(),
   createdAt: instantSchema,
 });
 export type Attendee = z.infer<typeof attendeeSchema>;
