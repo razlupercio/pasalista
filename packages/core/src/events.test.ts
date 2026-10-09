@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import {
   eventInputSchema,
+  purgeReminderDue,
   validateAnswers,
   type EventInput,
   type RegistrationField,
@@ -87,5 +88,29 @@ describe("validateAnswers", () => {
       { type: "checkbox", key: "news", label: "News", required: false },
     ];
     expect(validateAnswers(optional, {})).toEqual({ ok: true, answers: { news: false } });
+  });
+});
+
+describe("purgeReminderDue", () => {
+  const ended = { startsAt: "2026-01-01T18:00:00.000Z", endsAt: "2026-01-01T21:00:00.000Z" };
+  it("reminds 90 days after the end, never for purged events", () => {
+    expect(purgeReminderDue({ ...ended, purgedAt: null }, new Date("2026-03-31T00:00:00Z"))).toBe(
+      false,
+    );
+    expect(purgeReminderDue({ ...ended, purgedAt: null }, new Date("2026-04-02T00:00:00Z"))).toBe(
+      true,
+    );
+    expect(
+      purgeReminderDue(
+        { ...ended, purgedAt: "2026-02-01T00:00:00.000Z" },
+        new Date("2027-01-01T00:00:00Z"),
+      ),
+    ).toBe(false);
+  });
+  it("uses the start when there is no end", () => {
+    const now = new Date("2026-04-02T00:00:00Z");
+    expect(purgeReminderDue({ startsAt: ended.startsAt, endsAt: null, purgedAt: null }, now)).toBe(
+      true,
+    );
   });
 });

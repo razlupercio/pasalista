@@ -181,6 +181,11 @@ describe("event data purge", () => {
       purge(organizer, event),
     ]);
     expect(attempts.map((a) => a.status)).toEqual([409, 409, 409, 409, 409]);
+    // Scanners (and offline devices refreshing their bundle) lose access.
+    const bundle = await api(ctx, "GET", `/api/v1/events/${event.id}/offline-bundle`, {
+      cookie: organizer,
+    });
+    expect(bundle.status).toBe(404);
   });
 
   it("requires a closed event, the exact slug and an owner or admin", async () => {
@@ -193,13 +198,11 @@ describe("event data purge", () => {
     const session = await api<{ user: { id: string } }>(ctx, "GET", "/api/v1/auth/get-session", {
       cookie: member,
     });
-    await ctx.db
-      .insert(schema.organizationMembers)
-      .values({
-        organizationId: event.organizationId,
-        userId: session.body.user.id,
-        role: "member",
-      });
+    await ctx.db.insert(schema.organizationMembers).values({
+      organizationId: event.organizationId,
+      userId: session.body.user.id,
+      role: "member",
+    });
     expect((await purge(member, event)).status).toBe(403);
 
     const stranger = await newOrganizer(ctx);
