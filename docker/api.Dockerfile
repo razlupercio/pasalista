@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # The API runs TypeScript directly with Node's built-in type stripping (ADR-0006): no build step.
-FROM node:24-alpine
+FROM node:25-alpine
 
 RUN corepack enable
 WORKDIR /app
