@@ -3,22 +3,47 @@
 Open source event attendance validation with signed QR codes. Create an event, register
 attendees (open signup or a closed guest list), and check them in at the door, even offline.
 
-> Status: **pre-alpha** (Phase 1 of the [roadmap](docs/ROADMAP.md): accounts and foundations).
-> Events, QR tickets and the scanner arrive in the next phases.
+> Status: **v0.1.0**, first public release. Ready to try and to self-host for small and
+> medium events; expect rough edges. See the [roadmap](docs/ROADMAP.md) and the
+> [changelog](CHANGELOG.md).
 
-## Quickstart
+## Features
+
+- **Events** with open registration (public link) or a closed guest list (CSV import up to
+  2,000 rows), capacity, deadline and custom questions.
+- **Tickets** by email with a QR code signed with Ed25519 (one key per event, rotation and
+  revocation). Attendees can see or cancel their ticket from a private link.
+- **Scanner** in the browser (phone camera) or manual search, for organizers and invited staff.
+  Each person is checked in once, even with simultaneous scans.
+- **Offline mode**: the scanner keeps working without connection and syncs when it returns;
+  duplicates across devices are detected and reported.
+- **Live stats, CSV export and audit log** of who checked in whom and when.
+- **Privacy**: minimal data, and organizers can purge an event's personal data while keeping its
+  totals.
+- Spanish (Mexico) and English, light and dark mode, mobile first, WCAG AA checks.
+
+## Quickstart (5 minutes)
 
 Requirements: Docker with Compose v2.
 
 ```bash
+git clone https://github.com/razlupercio/pasalista.git
+cd pasalista
 docker compose up --build
 ```
 
-- App: <http://localhost:3000>
-- Emails sent by the app (Mailpit): <http://localhost:8025>
+Then, with the stack running:
 
-Create an account, open the verification email in Mailpit and you are in. The stack runs with
-development defaults; see [`.env.example`](.env.example) to change them.
+1. Open <http://localhost:3000> and create an account.
+2. Open the verification email in Mailpit (<http://localhost:8025>) and follow the link.
+3. Create an event, publish it and open its public registration link.
+4. Register with any email; the ticket with its QR code arrives in Mailpit.
+5. Back on the event, open the scanner on your phone or another tab, and scan the QR (or search
+   the guest by name). The stats update live.
+
+The stack runs with development defaults; see [`.env.example`](.env.example) to change them.
+To run PasaLista for real events, follow the [deployment guide](docs/DEPLOYMENT.md): it needs
+HTTPS (the camera only works on secure origins) and your own secrets.
 
 ## Development
 
@@ -79,9 +104,15 @@ PasaLista is free software under the [AGPL-3.0](LICENSE). To support development
 - Commercial license (if AGPL does not fit your use case): _contact TBD_
 - Hosted version: _planned_
 
+## Contributing
+
+Contributions are welcome: see [`CONTRIBUTING.md`](CONTRIBUTING.md) and the
+[Code of Conduct](CODE_OF_CONDUCT.md).
+
 ## Security
 
-Please report vulnerabilities privately. See [`SECURITY.md`](SECURITY.md).
+Please report vulnerabilities privately. See [`SECURITY.md`](SECURITY.md). The OWASP ASVS
+level 1 review is in [`docs/security/ASVS-L1.md`](docs/security/ASVS-L1.md).
 
 ## License
 
