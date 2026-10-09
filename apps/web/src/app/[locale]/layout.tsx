@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -45,6 +46,8 @@ export default async function LocaleLayout({
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: "common" });
+  // Set by the proxy with the Content-Security-Policy; reading it renders pages per request.
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
 
   return (
     // next-themes sets the `class` attribute before hydration.
@@ -56,7 +59,7 @@ export default async function LocaleLayout({
         >
           {t("skipToContent")}
         </a>
-        <ThemeProvider>
+        <ThemeProvider nonce={nonce}>
           <NextIntlClientProvider>
             <SiteHeader />
             <main id="main" className="mx-auto w-full max-w-5xl px-4 py-8">
