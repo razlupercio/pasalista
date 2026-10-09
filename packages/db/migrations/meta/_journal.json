@@ -29,6 +29,13 @@
       "when": 1791517408395,
       "tag": "0003_checkins_and_audit",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791520557994,
+      "tag": "0004_check_in_clock_adjusted",
+      "breakpoints": true
     }
   ]
 }

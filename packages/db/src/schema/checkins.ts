@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import {
+  boolean,
   index,
   jsonb,
   pgEnum,
@@ -51,6 +52,8 @@ export const checkIns = pgTable(
     /** Device clock (offline scans are synced later). */
     scannedAt: timestamp({ withTimezone: true }).notNull(),
     receivedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    /** The device clock looked wrong and `scanned_at` was clamped (offline sync, ADR-0005). */
+    clockAdjusted: boolean().notNull().default(false),
   },
   (t) => [
     uniqueIndex().on(t.eventId, t.attendeeId),
