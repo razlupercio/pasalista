@@ -15,6 +15,13 @@
       "when": 1791497708517,
       "tag": "0001_events_attendees_tickets",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791501732043,
+      "tag": "0002_staff_and_guest_invitations",
+      "breakpoints": true
     }
   ]
 }

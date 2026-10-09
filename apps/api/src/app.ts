@@ -19,6 +19,7 @@ import { attendeeRoutes, eventRoutes } from "./routes/events.ts";
 import { healthRoutes } from "./routes/health.ts";
 import { validationHook } from "./routes/openapi.ts";
 import { publicRoutes } from "./routes/public.ts";
+import { meRoutes, staffInvitationRoutes } from "./routes/staff.ts";
 import type { ServiceDeps } from "./services/context.ts";
 import type { AppEnv } from "./types.ts";
 
@@ -110,6 +111,14 @@ export function createApp(deps: AppDeps) {
   api.route("/", healthRoutes({ db, version: env.APP_VERSION }));
   api.route("/events", eventRoutes(services, auth));
   api.route("/attendees", attendeeRoutes(services, auth));
+  api.route(
+    "/staff-invitations",
+    staffInvitationRoutes(services, auth, {
+      store: rateLimitStore,
+      enabled: env.RATE_LIMIT_ENABLED,
+    }),
+  );
+  api.route("/me", meRoutes(services, auth));
   api.route(
     "/public",
     publicRoutes(services, { store: rateLimitStore, enabled: env.RATE_LIMIT_ENABLED }),

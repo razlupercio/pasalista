@@ -23,6 +23,10 @@ function recordingTransport(fail = false): EmailTransport & { sent: OutgoingEmai
   };
 }
 
+async function rowId(to: string): Promise<string> {
+  return (await rowFor(to)).id;
+}
+
 async function rowFor(to: string) {
   const [row] = await ctx.db
     .select()
@@ -44,7 +48,10 @@ describe("email outbox", () => {
       payload: { name: "Ana <b>", url: "http://localhost:3000/api/v1/auth/verify-email?token=abc" },
     });
     const transport = recordingTransport();
-    await processOutboxBatch(ctx.db, transport, logger, { batchSize: 1_000, now: later(1) });
+    await processOutboxBatch(ctx.db, transport, logger, {
+      onlyIds: [await rowId(to)],
+      now: later(1),
+    });
 
     const mail = transport.sent.find((m) => m.to === to);
     expect(mail?.subject).toBe("Verify your email on PasaLista");
@@ -66,17 +73,26 @@ describe("email outbox", () => {
     });
     const failing = recordingTransport(true);
 
-    await processOutboxBatch(ctx.db, failing, logger, { batchSize: 1_000, now: later(1) });
+    await processOutboxBatch(ctx.db, failing, logger, {
+      onlyIds: [await rowId(to)],
+      now: later(1),
+    });
     let row = await rowFor(to);
     expect(row).toMatchObject({ status: "pending", attempts: 1, lastError: "SMTP unavailable" });
     expect(row.nextAttemptAt.getTime()).toBeGreaterThan(later(1).getTime());
 
     // Not due yet: nothing happens.
-    await processOutboxBatch(ctx.db, failing, logger, { batchSize: 1_000, now: later(1) });
+    await processOutboxBatch(ctx.db, failing, logger, {
+      onlyIds: [await rowId(to)],
+      now: later(1),
+    });
     expect((await rowFor(to)).attempts).toBe(1);
 
     for (let i = 2; i <= MAX_EMAIL_ATTEMPTS; i++) {
-      await processOutboxBatch(ctx.db, failing, logger, { batchSize: 1_000, now: later(60 * i) });
+      await processOutboxBatch(ctx.db, failing, logger, {
+        onlyIds: [await rowId(to)],
+        now: later(60 * i),
+      });
     }
     row = await rowFor(to);
     expect(row).toMatchObject({ status: "failed", attempts: MAX_EMAIL_ATTEMPTS, payload: {} });

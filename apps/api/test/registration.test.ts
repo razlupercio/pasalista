@@ -91,7 +91,7 @@ describe("open registration", () => {
       ctx.db,
       { send: (m) => Promise.resolve(void sent.push(m)) },
       pino({ level: "silent" }),
-      { batchSize: 1_000 },
+      { onlyIds: [(await latestEmail(ctx, email))!.id] },
     );
     const mail = sent.find((m) => m.to === email);
     expect(mail?.subject).toBe("Tu boleto para Meetup de prueba");
@@ -270,15 +270,17 @@ describe("organizer ticket operations", () => {
 
   it("lists attendees with their ticket status", async () => {
     const { organizer, event, email } = await setup();
-    const list = await api<{ email: string; ticketStatus: string }[]>(
+    const list = await api<{ items: { email: string }[]; total: number; pendingCount: number }>(
       ctx,
       "GET",
       `/api/v1/events/${event.id}/attendees`,
       { cookie: organizer },
     );
-    expect(list.body).toEqual([
-      expect.objectContaining({ email, ticketStatus: "active", status: "active" }),
-    ]);
+    expect(list.body).toEqual({
+      items: [expect.objectContaining({ email, ticketStatus: "active", status: "active" })],
+      total: 1,
+      pendingCount: 0,
+    });
   });
 
   it("reissues: new QR and link by email, the old ones stop working", async () => {

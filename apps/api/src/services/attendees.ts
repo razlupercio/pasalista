@@ -1,27 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+// Public registration and the attendee's "my ticket" page. Organizer operations live in guests.ts.
 import {
-  generateTicketNonce,
-  signTicketToken,
   validateAnswers,
-  type Attendee,
   type PublicEvent,
   type RegistrationInput,
   type RegistrationState,
   type TicketView,
 } from "@pasalista/core";
 import { schema } from "@pasalista/db";
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { hashAccessToken, newAccessToken } from "../crypto/key-encryption.ts";
-import { enqueueEmail } from "../email/outbox.ts";
 import { ApiError } from "../errors.ts";
-import { nowOf, type Executor, type ServiceDeps, type Transaction } from "./context.ts";
-import { countActiveAttendees, findManagedEvent, isPast } from "./events.ts";
-import { activeKeyVersion, loadSecretKey } from "./signing-keys.ts";
+import { nowOf, type Executor, type ServiceDeps } from "./context.ts";
+import { countActiveAttendees, isPast } from "./events.ts";
+import { cancelAttendee } from "./guests.ts";
+import { issueTickets, signExistingTicket } from "./ticket-issuer.ts";
 
 const { attendees, events, organizations, tickets } = schema;
 
 type EventRow = typeof events.$inferSelect;
-type AttendeeRow = typeof attendees.$inferSelect;
 type TicketRow = typeof tickets.$inferSelect;
 
 // --- Registration state ------------------------------------------------------------------
@@ -33,13 +30,14 @@ export function registrationState(
 ): RegistrationState {
   if (event.status !== "published" || isPast(deps, event)) return "closed";
   if (event.registrationMode === "closed") return "invitation_only";
-  if (event.registrationDeadline && event.registrationDeadline <= nowOf(deps))
+  if (event.registrationDeadline && event.registrationDeadline <= nowOf(deps)) {
     return "deadline_passed";
+  }
   if (event.capacity !== null && activeCount >= event.capacity) return "full";
   return "open";
 }
 
-async function organizerName(db: Executor, organizationId: string): Promise<string> {
+export async function organizerName(db: Executor, organizationId: string): Promise<string> {
   const [org] = await db
     .select({ name: organizations.name })
     .from(organizations)
@@ -73,75 +71,6 @@ export async function getPublicEvent(deps: ServiceDeps, slug: string): Promise<P
     countActiveAttendees(deps.db, event.id),
   ]);
   return toPublicEvent(event, organizer, registrationState(deps, event, activeCount));
-}
-
-// --- Tickets -------------------------------------------------------------------------------
-
-/**
- * Issues a new ticket (fresh nonce, current key version) and a new "my ticket" link, then
- * queues the ticket email in the same transaction. Any previous active ticket is superseded.
- */
-async function issueTicket(
-  deps: ServiceDeps,
-  tx: Transaction,
-  event: EventRow,
-  attendee: AttendeeRow,
-): Promise<void> {
-  await tx
-    .update(tickets)
-    .set({ status: "superseded", revokedAt: nowOf(deps), revokedReason: "reissued" })
-    .where(and(eq(tickets.attendeeId, attendee.id), eq(tickets.status, "active")));
-
-  const keyVersion = await activeKeyVersion(tx, event.id);
-  const nonce = generateTicketNonce();
-  await tx
-    .insert(tickets)
-    .values({ attendeeId: attendee.id, eventId: event.id, keyVersion, nonce });
-
-  const access = newAccessToken();
-  await tx
-    .update(attendees)
-    .set({ ticketAccessHash: access.hash })
-    .where(eq(attendees.id, attendee.id));
-
-  const qrToken = await signTicket(deps, tx, {
-    eventId: event.id,
-    attendeeId: attendee.id,
-    keyVersion,
-    nonce,
-  });
-  const dateFormat = new Intl.DateTimeFormat(attendee.locale, {
-    dateStyle: "full",
-    timeStyle: "short",
-    timeZone: event.timezone,
-  });
-  await enqueueEmail(tx, {
-    kind: "ticket",
-    to: attendee.email,
-    locale: attendee.locale,
-    organizationId: event.organizationId,
-    payload: {
-      name: attendee.name,
-      eventName: event.name,
-      when: dateFormat.format(event.startsAt),
-      where: [event.venueName, event.venueAddress].filter(Boolean).join(", "),
-      url: `${deps.publicUrl}/${attendee.locale}/t/${access.token}`,
-      qrToken,
-    },
-  });
-}
-
-async function signTicket(
-  deps: ServiceDeps,
-  db: Executor,
-  ticket: { eventId: string; attendeeId: string; keyVersion: number; nonce: Uint8Array },
-): Promise<string> {
-  const secretKey = await loadSecretKey(db, deps.kek, ticket.eventId, ticket.keyVersion);
-  try {
-    return signTicketToken(ticket, secretKey);
-  } finally {
-    secretKey.fill(0);
-  }
 }
 
 // --- Public registration -------------------------------------------------------------------
@@ -186,7 +115,6 @@ export async function registerAttendee(
       status: "active" as const,
       cancelledAt: null,
     };
-    const placeholderHash = newAccessToken().hash; // replaced by issueTicket
     const [attendee] = existing
       ? await tx.update(attendees).set(values).where(eq(attendees.id, existing.id)).returning()
       : await tx
@@ -197,10 +125,10 @@ export async function registerAttendee(
             organizationId: event.organizationId,
             email: input.email,
             source: "open_registration",
-            ticketAccessHash: placeholderHash,
+            ticketAccessHash: newAccessToken().hash, // replaced when the ticket is issued
           })
           .returning();
-    await issueTicket(deps, tx, event, attendee!);
+    await issueTickets(deps, tx, event, [attendee!], "registration");
   });
 }
 
@@ -213,7 +141,8 @@ async function findByAccessToken(db: Executor, accessToken: string, forUpdate = 
     .innerJoin(events, eq(events.id, attendees.eventId))
     .where(eq(attendees.ticketAccessHash, hashAccessToken(accessToken)));
   const [row] = forUpdate ? await query.for("update", { of: attendees }) : await query;
-  if (!row) throw new ApiError(404, "not_found");
+  // Pending guests hold a placeholder hash that no token maps to; treat them as unknown too.
+  if (!row || row.attendee.invitationPending) throw new ApiError(404, "not_found");
   return row;
 }
 
@@ -248,15 +177,7 @@ export async function viewTicket(deps: ServiceDeps, accessToken: string): Promis
     },
     ticket: {
       status: ticket?.status ?? "revoked",
-      qrToken:
-        valid && ticket
-          ? await signTicket(deps, deps.db, {
-              eventId: event.id,
-              attendeeId: attendee.id,
-              keyVersion: ticket.keyVersion,
-              nonce: ticket.nonce,
-            })
-          : null,
+      qrToken: valid && ticket ? await signExistingTicket(deps, deps.db, ticket) : null,
     },
   };
 }
@@ -271,99 +192,10 @@ export async function ticketQrToken(
   return { token: view.ticket.qrToken, slug: view.event.slug };
 }
 
-async function cancelAttendee(
-  deps: ServiceDeps,
-  tx: Transaction,
-  attendeeId: string,
-  reason: string,
-) {
-  const now = nowOf(deps);
-  await tx
-    .update(attendees)
-    .set({ status: "cancelled", cancelledAt: now })
-    .where(eq(attendees.id, attendeeId));
-  await tx
-    .update(tickets)
-    .set({ status: "revoked", revokedAt: now, revokedReason: reason })
-    .where(and(eq(tickets.attendeeId, attendeeId), eq(tickets.status, "active")));
-}
-
 export async function cancelOwnRegistration(deps: ServiceDeps, accessToken: string): Promise<void> {
   await deps.db.transaction(async (tx) => {
     const { attendee } = await findByAccessToken(tx, accessToken, true);
     if (attendee.status === "cancelled") return; // idempotent
     await cancelAttendee(deps, tx, attendee.id, "cancelled_by_attendee");
-  });
-}
-
-// --- Organizer operations ------------------------------------------------------------------
-
-async function findManagedAttendee(tx: Transaction, userId: string, attendeeId: string) {
-  const [row] = await tx.select().from(attendees).where(eq(attendees.id, attendeeId)).for("update");
-  if (!row) throw new ApiError(404, "not_found");
-  const event = await findManagedEvent(tx, userId, row.eventId); // 404 when not a member
-  return { attendee: row, event };
-}
-
-export async function listAttendees(
-  deps: ServiceDeps,
-  userId: string,
-  eventId: string,
-): Promise<Attendee[]> {
-  await findManagedEvent(deps.db, userId, eventId);
-  const rows = await deps.db
-    .select({ attendee: attendees, ticketStatus: tickets.status })
-    .from(attendees)
-    .leftJoin(tickets, and(eq(tickets.attendeeId, attendees.id), eq(tickets.status, "active")))
-    .where(eq(attendees.eventId, eventId))
-    .orderBy(asc(attendees.createdAt));
-  return rows.map(({ attendee, ticketStatus }) => ({
-    id: attendee.id,
-    name: attendee.name,
-    email: attendee.email,
-    status: attendee.status,
-    source: attendee.source,
-    answers: attendee.answers,
-    ticketStatus: ticketStatus ?? (attendee.status === "active" ? "revoked" : null),
-    createdAt: attendee.createdAt.toISOString(),
-  }));
-}
-
-export async function reissueTicket(
-  deps: ServiceDeps,
-  userId: string,
-  attendeeId: string,
-): Promise<void> {
-  await deps.db.transaction(async (tx) => {
-    const { attendee, event } = await findManagedAttendee(tx, userId, attendeeId);
-    if (attendee.status !== "active")
-      throw new ApiError(409, "invalid_state", "Attendee is cancelled");
-    await issueTicket(deps, tx, event, attendee);
-  });
-}
-
-export async function revokeTicket(
-  deps: ServiceDeps,
-  userId: string,
-  attendeeId: string,
-): Promise<void> {
-  await deps.db.transaction(async (tx) => {
-    await findManagedAttendee(tx, userId, attendeeId);
-    await tx
-      .update(tickets)
-      .set({ status: "revoked", revokedAt: nowOf(deps), revokedReason: "revoked_by_organizer" })
-      .where(and(eq(tickets.attendeeId, attendeeId), eq(tickets.status, "active")));
-  });
-}
-
-export async function cancelRegistration(
-  deps: ServiceDeps,
-  userId: string,
-  attendeeId: string,
-): Promise<void> {
-  await deps.db.transaction(async (tx) => {
-    const { attendee } = await findManagedAttendee(tx, userId, attendeeId);
-    if (attendee.status === "cancelled") return;
-    await cancelAttendee(deps, tx, attendee.id, "cancelled_by_organizer");
   });
 }

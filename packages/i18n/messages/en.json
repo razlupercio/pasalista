@@ -20,7 +20,9 @@
     "cancel": "Cancel",
     "back": "Back",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "close": "Close",
+    "all": "All"
   },
   "nav": {
     "signIn": "Sign in",
@@ -93,7 +95,11 @@
     "organization": "Organization: {name}",
     "eventsTitle": "Your events",
     "emptyEvents": "You have no events yet. Create your first one to start registering attendees.",
-    "newEvent": "Create event"
+    "newEvent": "Create event",
+    "staffEventsTitle": "Events where you are staff",
+    "staffEventsHint": "You will check people in at these events with the scanner (coming in the next phase).",
+    "team": "Team",
+    "activeOrganization": "Active organization"
   },
   "events": {
     "status": {
@@ -179,7 +185,7 @@
         "active": "Valid",
         "superseded": "Replaced",
         "revoked": "Revoked",
-        "none": "No ticket"
+        "pending": "Not sent"
       },
       "reissue": "Send new ticket",
       "reissueConfirm": "A new QR code and link will be generated and emailed. The previous QR will stop working.",
@@ -187,7 +193,66 @@
       "revokeConfirm": "The current QR will no longer be valid. You can send a new one later.",
       "cancel": "Cancel registration",
       "cancelConfirm": "The registration will be cancelled and its QR will no longer be valid.",
-      "done": "Done."
+      "done": "Done.",
+      "search": "Search by name or email",
+      "filterStatus": "Registration",
+      "filterTicket": "Ticket",
+      "showing": "Showing {shown} of {total}",
+      "loadMore": "Show more",
+      "noResults": "No results with these filters.",
+      "add": "Add guest",
+      "addSubmit": "Add",
+      "added": "Guest added. Send the invitations when you are ready.",
+      "import": "Import CSV",
+      "send": "Send invitations ({count})",
+      "sendConfirm": "The ticket will be emailed to {count, plural, one {# guest} other {# guests}}.",
+      "sent": "{count, plural, =0 {There were no pending invitations.} one {# invitation sent.} other {# invitations sent.}}",
+      "sendNeedsPublish": "Publish the event to send invitations.",
+      "sendOne": "Send invitation",
+      "resend": "Resend ticket",
+      "resendConfirm": "The same QR will be emailed again with a new link. The previous link will stop working.",
+      "locale": "Email language"
+    },
+    "import": {
+      "title": "Import guests",
+      "intro": "Upload a CSV file with name and email columns (optional: language, with es-MX or en). You can export it from Excel or Google Sheets.",
+      "file": "CSV file",
+      "limits": "Up to {max} rows per file. You can upload several files.",
+      "missingColumns": "We could not find the name and email columns in the first row.",
+      "tooMany": "The file has {count} rows; the maximum is {max}.",
+      "empty": "The file has no guest rows.",
+      "unreadable": "We could not read the file. Save it as CSV (UTF-8) and try again.",
+      "ready": "{count, plural, =0 {No guests ready} one {# guest ready} other {# guests ready}} to add.",
+      "withProblems": "{count, plural, one {# row has problems} other {# rows have problems}} and will not be added.",
+      "line": "Row",
+      "email": "Email",
+      "problem": "Problem",
+      "problems": {
+        "invalid_name": "Missing name",
+        "invalid_email": "Invalid email",
+        "invalid_locale": "Invalid language (use es-MX or en)",
+        "duplicate_in_file": "Email repeated in the file",
+        "already_on_list": "Already on the list"
+      },
+      "submit": "Add {count, plural, one {# guest} other {# guests}}",
+      "done": "{count, plural, =0 {No guests were added.} one {# guest added.} other {# guests added.}}",
+      "doneHint": "Review the list and send the invitations when you are ready.",
+      "backToEvent": "Back to event",
+      "fileTooLarge": "The file is larger than 1 MB. Split it into smaller files."
+    },
+    "staff": {
+      "title": "Staff",
+      "intro": "People who will check guests in. They cannot see or edit the event's data.",
+      "email": "Their email",
+      "invite": "Invite",
+      "invited": "Invitation sent. It expires in 7 days.",
+      "members": "Active staff",
+      "pending": "Pending invitations",
+      "expires": "Expires {date}",
+      "remove": "Remove",
+      "removeConfirm": "Remove {name} from this event's staff?",
+      "revoke": "Cancel invitation",
+      "empty": "No staff for this event yet."
     }
   },
   "publicEvent": {
@@ -232,7 +297,8 @@
     "registration_closed": "Registration for this event is closed.",
     "invalid_state": "This action is not available in the current state.",
     "rate_limited": "Too many attempts. Wait a moment and try again.",
-    "generic": "Something went wrong. Please try again."
+    "generic": "Something went wrong. Please try again.",
+    "conflict": "This already exists."
   },
   "emails": {
     "footer": "You received this email because someone used this address on PasaLista. If it wasn't you, ignore it.",
@@ -262,7 +328,77 @@
       "whereLabel": "Where",
       "qrHint": "Show this QR code at the entrance. You can also open your ticket from the link.",
       "qrAlt": "QR code of your ticket",
-      "cta": "View my ticket"
+      "cta": "View my ticket",
+      "bodyInvitation": "You are invited to {eventName}."
+    },
+    "staffInvitation": {
+      "subject": "You were invited as staff for {eventName}",
+      "greeting": "Hi,",
+      "body": "{inviterName} invited you to help check guests in at {eventName}. Accept with a PasaLista account that uses this email. The link expires in 7 days.",
+      "cta": "View invitation"
+    },
+    "teamInvitation": {
+      "subject": "{inviterName} invited you to {organizationName} on PasaLista",
+      "greeting": "Hi,",
+      "body": "{inviterName} invited you to organize events with {organizationName}. Accept with a PasaLista account that uses this email. The link expires in 7 days.",
+      "cta": "View invitation"
     }
+  },
+  "invitations": {
+    "staffTitle": "Staff invitation",
+    "staffBody": "{organizer} invited you to check guests in at {event}.",
+    "teamTitle": "Team invitation",
+    "teamBody": "{inviter} invited you to join {organization} as {role}.",
+    "forEmail": "This invitation is for {email}.",
+    "signInToAccept": "Sign in or create an account with that email to accept it.",
+    "wrongAccount": "You are signed in with another account. Sign out and sign in with {email} to accept.",
+    "accept": "Accept invitation",
+    "reject": "Decline",
+    "staffAccepted": "Done! You are now staff for {event}.",
+    "teamAccepted": "Done! You are now part of {organization}.",
+    "rejected": "You declined the invitation.",
+    "states": {
+      "accepted": "This invitation was already accepted.",
+      "expired": "This invitation has expired. Ask for a new one.",
+      "revoked": "This invitation was cancelled."
+    },
+    "notFound": "The invitation does not exist, is no longer valid or is not for your account.",
+    "goToDashboard": "Go to my dashboard"
+  },
+  "team": {
+    "title": "Team",
+    "organization": "Organization",
+    "switch": "Use this organization",
+    "personal": "Personal",
+    "members": "Members",
+    "role": "Role",
+    "roles": {
+      "owner": "Owner",
+      "admin": "Admin",
+      "member": "Organizer"
+    },
+    "roleHints": {
+      "owner": "Full control of the organization.",
+      "admin": "Manages events and members.",
+      "member": "Creates and manages events."
+    },
+    "you": "(you)",
+    "invite": "Invite someone",
+    "inviteEmail": "Email",
+    "inviteRole": "Role",
+    "inviteSubmit": "Send invitation",
+    "invited": "Invitation sent to {email}.",
+    "pending": "Pending invitations",
+    "cancelInvitation": "Cancel",
+    "remove": "Remove",
+    "removeConfirm": "Remove {name} from the organization?",
+    "makeRole": "Change role",
+    "leave": "Leave organization",
+    "leaveConfirm": "Leave {organization}? You will lose access to its events.",
+    "newOrganization": "Create organization",
+    "newOrganizationName": "Organization name",
+    "create": "Create",
+    "created": "Organization created and selected.",
+    "onlyAdmins": "Only owners and admins can invite or remove members."
   }
 }

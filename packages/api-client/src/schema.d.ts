@@ -472,7 +472,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Deleted */
+                /** @description Done */
                 204: {
                     headers: {
                         [name: string]: unknown;
@@ -1117,9 +1117,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Guest list with search, filters and pagination */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    q?: string;
+                    status?: "active" | "cancelled";
+                    ticket?: "pending" | "active" | "superseded" | "revoked";
+                    limit?: number;
+                    offset?: number | null;
+                };
                 header?: never;
                 path: {
                     eventId: string;
@@ -1135,22 +1142,515 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            /** Format: uuid */
-                            id: string;
+                            items: {
+                                /** Format: uuid */
+                                id: string;
+                                name: string;
+                                email: string;
+                                /** @enum {string} */
+                                status: "active" | "cancelled";
+                                /** @enum {string} */
+                                source: "open_registration" | "import" | "manual";
+                                answers: {
+                                    [key: string]: string | boolean;
+                                };
+                                /** @enum {string|null} */
+                                ticketStatus: "active" | "superseded" | "revoked" | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                            }[];
+                            total: number;
+                            pendingCount: number;
+                        };
+                    };
+                };
+                /** @description Invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Add one guest (not emailed until invitations are sent) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    eventId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        name: string;
+                        email: string;
+                        /** @enum {string} */
+                        locale: "es-MX" | "en";
+                    };
+                };
+            };
+            responses: {
+                /** @description Added */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Conflicts with the current state */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{eventId}/attendees/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Import up to 2,000 guests; invalid rows are reported, valid ones added */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    eventId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        rows: {
+                            line: number;
                             name: string;
                             email: string;
-                            /** @enum {string} */
-                            status: "active" | "cancelled";
-                            /** @enum {string} */
-                            source: "open_registration" | "import" | "manual";
-                            answers: {
-                                [key: string]: string | boolean;
-                            };
-                            /** @enum {string|null} */
-                            ticketStatus: "active" | "superseded" | "revoked" | null;
-                            /** Format: date-time */
-                            createdAt: string;
+                            locale: string | null;
                         }[];
+                        /** @enum {string} */
+                        defaultLocale: "es-MX" | "en";
+                    };
+                };
+            };
+            responses: {
+                /** @description Import report */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            added: number;
+                            skipped: {
+                                line: number;
+                                email: string;
+                                /** @enum {string} */
+                                problem: "invalid_name" | "invalid_email" | "invalid_locale" | "duplicate_in_file" | "already_on_list";
+                            }[];
+                        };
+                    };
+                };
+                /** @description Invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Conflicts with the current state */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{eventId}/invitations/send": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Issue tickets for every pending guest and queue their emails */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    eventId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Queued */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            sent: number;
+                        };
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Conflicts with the current state */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{eventId}/staff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    eventId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Staff and pending invitations */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            members: {
+                                /** Format: uuid */
+                                userId: string;
+                                name: string;
+                                email: string;
+                                /** Format: date-time */
+                                addedAt: string;
+                            }[];
+                            invitations: {
+                                /** Format: uuid */
+                                id: string;
+                                email: string;
+                                /** Format: date-time */
+                                expiresAt: string;
+                            }[];
+                        };
                     };
                 };
                 /** @description Not signed in */
@@ -1207,6 +1707,298 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{eventId}/staff/invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Email a staff invitation (valid 7 days, only for that email) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    eventId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        email: string;
+                        /** @enum {string} */
+                        locale: "es-MX" | "en";
+                    };
+                };
+            };
+            responses: {
+                /** @description Done */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Conflicts with the current state */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{eventId}/staff/invitations/{invitationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    eventId: string;
+                    invitationId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Done */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{eventId}/staff/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    eventId: string;
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Done */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/attendees/{attendeeId}/ticket/reissue": {
         parameters: {
             query?: never;
@@ -1216,7 +2008,109 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Issue a new QR and link, emailed to the attendee */
+        /** Send a new ticket (new QR and link); also sends a pending invitation */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    attendeeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Done */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Conflicts with the current state */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/attendees/{attendeeId}/ticket/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Email the current ticket again (same QR, new link) */
         post: {
             parameters: {
                 query?: never;
@@ -1507,6 +2401,314 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/staff-invitations/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Staff invitation details (public, for the invitation page) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    token: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Invitation */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            eventName: string;
+                            organizerName: string;
+                            email: string;
+                            /** @enum {string} */
+                            state: "pending" | "accepted" | "expired" | "revoked";
+                        };
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Rate limited */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/staff-invitations/{token}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Accept with the signed-in account (must be the invited, verified email) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    token: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Accepted */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            eventId: string;
+                        };
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Not allowed */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Conflicts with the current state */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Rate limited */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/staff-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Events where the signed-in user is staff */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Events */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            name: string;
+                            /** Format: date-time */
+                            startsAt: string;
+                            timezone: string;
+                            venueName: string;
+                            /** @enum {string} */
+                            status: "draft" | "published" | "closed";
+                            organizerName: string;
+                        }[];
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;

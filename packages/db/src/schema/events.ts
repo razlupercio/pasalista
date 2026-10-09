@@ -2,7 +2,7 @@
 import type { Answers, RegistrationField } from "@pasalista/core";
 import { sql } from "drizzle-orm";
 import {
-  customType,
+  boolean,
   index,
   integer,
   jsonb,
@@ -14,13 +14,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { organizations, users } from "./auth.ts";
-import { createdAt, id, updatedAt } from "./columns.ts";
-
-const bytea = customType<{ data: Uint8Array; driverData: Buffer }>({
-  dataType: () => "bytea",
-  toDriver: (value) => Buffer.from(value),
-  fromDriver: (value) => new Uint8Array(value),
-});
+import { bytea, createdAt, id, updatedAt } from "./columns.ts";
 
 export const eventStatus = pgEnum("event_status", ["draft", "published", "closed"]);
 export const registrationMode = pgEnum("registration_mode", ["open", "closed"]);
@@ -98,6 +92,8 @@ export const attendees = pgTable(
     answers: jsonb().$type<Answers>().notNull().default({}),
     /** SHA-256 of the secret "my ticket" link token; the token itself is never stored. */
     ticketAccessHash: bytea().notNull().unique(),
+    /** Added by the organizer and not emailed yet ("Send invitations" picks these up). */
+    invitationPending: boolean().notNull().default(false),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
     cancelledAt: timestamp({ withTimezone: true }),

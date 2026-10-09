@@ -14,7 +14,7 @@ import { authErrorKey, type AuthErrorKey } from "@/lib/auth-errors.ts";
 
 type FieldErrors = Partial<Record<"name" | "email" | "password", AuthErrorKey>>;
 
-export function SignUpForm() {
+export function SignUpForm({ next }: { next: string | null }) {
   const t = useTranslations("auth");
   const locale = useLocale();
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -50,7 +50,7 @@ export function SignUpForm() {
     setPending(true);
     const { error } = await authClient.signUp.email({
       ...parsed.data,
-      callbackURL: `/${locale}/dashboard`,
+      callbackURL: `/${locale}${next ?? "/dashboard"}`,
     });
     setPending(false);
     // An existing account gets the same answer, so the form does not reveal registered emails.
@@ -109,7 +109,10 @@ export function SignUpForm() {
       </Button>
       <p className="text-sm text-muted-foreground">
         {t("signUp.haveAccount")}{" "}
-        <Link href="/sign-in" className="text-foreground underline underline-offset-4">
+        <Link
+          href={next ? `/sign-in?next=${encodeURIComponent(next)}` : "/sign-in"}
+          className="text-foreground underline underline-offset-4"
+        >
           {t("signIn.submit")}
         </Link>
       </p>

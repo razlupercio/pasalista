@@ -21,7 +21,7 @@ type EventRow = typeof events.$inferSelect;
 export function makeSlug(name: string): string {
   const base = name
     .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
+    .replace(/[\u0300-\u036F]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")

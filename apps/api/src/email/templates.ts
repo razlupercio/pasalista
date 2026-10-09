@@ -12,12 +12,20 @@ export const emailPayloadSchemas = {
   reset_password: z.object({ name: z.string(), url: httpUrl }),
   magic_link: z.object({ url: httpUrl }),
   ticket: z.object({
+    /** `invitation` for guests added by the organizer (closed list), `registration` otherwise. */
+    variant: z.enum(["registration", "invitation"]).default("registration"),
     name: z.string(),
     eventName: z.string(),
     when: z.string(),
     where: z.string(),
     url: httpUrl,
     qrToken: z.string().startsWith(TICKET_TOKEN_PREFIX),
+  }),
+  staff_invitation: z.object({ inviterName: z.string(), eventName: z.string(), url: httpUrl }),
+  team_invitation: z.object({
+    inviterName: z.string(),
+    organizationName: z.string(),
+    url: httpUrl,
   }),
 } as const;
 
@@ -44,6 +52,8 @@ const messageKeys = {
   reset_password: "resetPassword",
   magic_link: "magicLink",
   ticket: "ticket",
+  staff_invitation: "staffInvitation",
+  team_invitation: "teamInvitation",
 } as const satisfies Record<EmailKind, string>;
 
 export function isEmailKind(kind: string): kind is EmailKind {
@@ -78,7 +88,11 @@ export async function renderEmail(
   for (const [key, value] of Object.entries(payload)) values[key] = String(value);
 
   const greeting = format(strings.greeting, values);
-  const body = format(strings.body, values);
+  const bodyTemplate =
+    kind === "ticket" && values.variant === "invitation"
+      ? catalog.ticket.bodyInvitation
+      : strings.body;
+  const body = format(bodyTemplate, values);
   const textLines = [greeting, "", body];
   const htmlParts = [`<p>${escapeHtml(greeting)}</p>`, `<p>${escapeHtml(body)}</p>`];
   const attachments: EmailAttachment[] = [];

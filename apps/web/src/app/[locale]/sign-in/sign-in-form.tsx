@@ -22,7 +22,7 @@ type Notice = {
   key: AuthErrorKey | "magicLinkSent" | "verificationResent";
 };
 
-export function SignInForm({ linkInvalid }: { linkInvalid: boolean }) {
+export function SignInForm({ linkInvalid, next }: { linkInvalid: boolean; next: string | null }) {
   const t = useTranslations("auth");
   const locale = useLocale();
   const router = useRouter();
@@ -33,7 +33,8 @@ export function SignInForm({ linkInvalid }: { linkInvalid: boolean }) {
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const hydrated = useHydrated();
-  const callbackURL = `/${locale}/dashboard`;
+  const destination = next ?? "/dashboard";
+  const callbackURL = `/${locale}${destination}`;
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -71,7 +72,7 @@ export function SignInForm({ linkInvalid }: { linkInvalid: boolean }) {
       if (key === "emailNotVerified") setUnverifiedEmail(parsed.data.email);
       return setNotice({ tone: "error", key });
     }
-    router.replace("/dashboard");
+    router.replace(destination);
     router.refresh();
   }
 
@@ -122,7 +123,10 @@ export function SignInForm({ linkInvalid }: { linkInvalid: boolean }) {
         </Link>
         <p>
           {t("signIn.noAccount")}{" "}
-          <Link href="/sign-up" className="text-foreground underline underline-offset-4">
+          <Link
+            href={next ? `/sign-up?next=${encodeURIComponent(next)}` : "/sign-up"}
+            className="text-foreground underline underline-offset-4"
+          >
             {t("signUp.submit")}
           </Link>
         </p>
