@@ -86,7 +86,8 @@
       "nameRequired": "Escribe tu nombre.",
       "linkInvalid": "El enlace no es válido o ya expiró. Solicita uno nuevo.",
       "rateLimited": "Demasiados intentos. Espera un momento e inténtalo de nuevo.",
-      "generic": "Algo salió mal. Inténtalo de nuevo."
+      "generic": "Algo salió mal. Inténtalo de nuevo.",
+      "passwordCompromised": "Esta contraseña apareció en una filtración de datos. Elige otra."
     }
   },
   "dashboard": {

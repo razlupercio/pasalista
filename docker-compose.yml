@@ -48,6 +48,8 @@ services:
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       EMAIL_FROM: ${EMAIL_FROM:-PasaLista <no-reply@pasalista.localhost>}
+      # Reject breached passwords via Have I Been Pwned (needs outbound HTTPS).
+      PASSWORD_BREACH_CHECK: ${PASSWORD_BREACH_CHECK:-true}
     ports:
       - "127.0.0.1:3001:3001"
     depends_on:

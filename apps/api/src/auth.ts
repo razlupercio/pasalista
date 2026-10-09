@@ -9,7 +9,7 @@ import {
 import { schema, type Database } from "@pasalista/db";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { magicLink, organization } from "better-auth/plugins";
+import { haveIBeenPwned, magicLink, organization } from "better-auth/plugins";
 import { asc, eq } from "drizzle-orm";
 import { enqueueEmail } from "./email/outbox.ts";
 import type { Env } from "./env.ts";
@@ -155,6 +155,7 @@ export function createAuth(options: { db: Database; env: Env }) {
       },
     },
     plugins: [
+      haveIBeenPwned({ enabled: env.PASSWORD_BREACH_CHECK }),
       organization({
         creatorRole: "owner",
         organizationLimit: 20,

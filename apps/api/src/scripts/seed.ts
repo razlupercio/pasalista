@@ -19,7 +19,11 @@ if (env.NODE_ENV === "production") {
 }
 
 const { db, pool } = createDb(env.DATABASE_URL);
-const auth = createAuth({ db, env: { ...env, RATE_LIMIT_ENABLED: false } });
+// The demo password is public anyway; no need to check it against breach lists.
+const auth = createAuth({
+  db,
+  env: { ...env, RATE_LIMIT_ENABLED: false, PASSWORD_BREACH_CHECK: false },
+});
 
 const [existing] = await db
   .select({ id: schema.users.id })

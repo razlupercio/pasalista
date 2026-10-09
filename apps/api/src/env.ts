@@ -44,6 +44,12 @@ const envSchema = z
     TRUSTED_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(0),
     RATE_LIMIT_ENABLED: booleanString.default(true),
     EMAIL_WORKER_ENABLED: booleanString.default(true),
+    /**
+     * Rejects passwords found in known breaches (Have I Been Pwned, k-anonymity: only 5 hex
+     * characters of the SHA-1 hash leave the server). Needs outbound HTTPS; disable for
+     * air-gapped installs.
+     */
+    PASSWORD_BREACH_CHECK: booleanString.default(true),
     SMTP_HOST: z.string().min(1),
     SMTP_PORT: z.coerce.number().int().min(1).max(65_535),
     SMTP_SECURE: booleanString.default(false),

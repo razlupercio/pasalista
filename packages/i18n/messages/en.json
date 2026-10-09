@@ -86,7 +86,8 @@
       "nameRequired": "Enter your name.",
       "linkInvalid": "This link is not valid or has expired. Request a new one.",
       "rateLimited": "Too many attempts. Wait a moment and try again.",
-      "generic": "Something went wrong. Please try again."
+      "generic": "Something went wrong. Please try again.",
+      "passwordCompromised": "This password appeared in a data breach. Choose a different one."
     }
   },
   "dashboard": {

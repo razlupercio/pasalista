@@ -20,6 +20,8 @@ export function authErrorKey(
       return "passwordTooShort";
     case "PASSWORD_TOO_LONG":
       return "passwordTooLong";
+    case "PASSWORD_COMPROMISED":
+      return "passwordCompromised";
     case "INVALID_TOKEN":
       return "linkInvalid";
     default:
