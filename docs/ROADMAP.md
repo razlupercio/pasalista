@@ -102,7 +102,8 @@ then reconnecting: one check-in (earliest `scannedAt`), one reported duplicate.
 - ASVS L1 checklist review, CSP tightening, rate-limit tuning, dependency audit.
 - Full Playwright suite for critical flows; accessibility checks (axe) for WCAG AA.
 - README quickstart (5 minutes), `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, deployment guide.
-- Event data purge UI and documentation.
+- Event data purge UI and documentation (ADR-0011): owners and admins purge personal data of
+  closed events and keep the totals; manual retention with a reminder 90 days after the end.
 - First tagged release `v0.1.0`.
 
 ## Later (v2 candidates, not in MVP)
