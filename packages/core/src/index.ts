@@ -8,6 +8,7 @@ export * from "./guests.ts";
 export * from "./health.ts";
 export * from "./ids.ts";
 export * from "./locale.ts";
+export * from "./offline.ts";
 export * from "./problem.ts";
 export * from "./qr-token.ts";
 export * from "./timezone.ts";
