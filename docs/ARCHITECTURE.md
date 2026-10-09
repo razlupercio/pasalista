@@ -183,7 +183,7 @@ Summary of [ADR-0002](adr/0002-qr-token-format-and-key-management.md):
 
 Summary of the planned [ADR-0005](adr/0005-offline-check-in-and-conflict-resolution.md):
 
-- Service worker via Serwist; IndexedDB stores the event bundle: public keys (by version),
+- Hand-written service worker (ADR-0010); IndexedDB stores the event bundle: public keys (by version),
   a minimal attendee list `{attendeeId, currentNonce, displayName?}`, revoked tickets and
   the set of attendees already checked in at download time.
 - Offline scan = verify signature locally + look up the bundle + local queue. Each queued
@@ -238,20 +238,20 @@ Each is justified again when added in its phase (license, maintenance, size). Li
 verified at install time; all listed are expected to be permissive (MIT, ISC, Apache-2.0),
 which are compatible with AGPL-3.0.
 
-| Area         | Package                                                               | Why                                                              |
-| ------------ | --------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| Monorepo     | `turbo`                                                               | required by the stack                                            |
-| API          | `hono`, `@hono/node-server`, `@hono/zod-openapi`                      | required by the stack; OpenAPI from Zod                          |
-| Validation   | `zod`                                                                 | required by the stack                                            |
-| DB           | `drizzle-orm`, `drizzle-kit`, `pg`                                    | required by the stack; `pg` is the reference Postgres driver     |
-| Auth         | `better-auth`                                                         | required by the stack (includes organization and Expo plugins)   |
-| Crypto       | `@noble/curves`                                                       | Ed25519 that runs identically in Node, browsers and React Native |
-| QR           | `qrcode`, `@yudiel/react-qr-scanner`                                  | named in the brief                                               |
-| Typed client | `openapi-typescript`, `openapi-fetch`                                 | generated clients from OpenAPI, works in Expo                    |
-| Web          | `next`, `tailwindcss`, shadcn/ui, `next-intl`, `@serwist/next`, `idb` | stack; i18n; PWA; tiny IndexedDB wrapper                         |
-| Email        | `nodemailer`                                                          | required by the stack                                            |
-| Ops          | `pino`                                                                | structured logging with redaction (rate limiter is in-house)     |
-| Tests        | `vitest`, `@playwright/test`                                          | required by the stack                                            |
+| Area         | Package                                                                          | Why                                                              |
+| ------------ | -------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Monorepo     | `turbo`                                                                          | required by the stack                                            |
+| API          | `hono`, `@hono/node-server`, `@hono/zod-openapi`                                 | required by the stack; OpenAPI from Zod                          |
+| Validation   | `zod`                                                                            | required by the stack                                            |
+| DB           | `drizzle-orm`, `drizzle-kit`, `pg`                                               | required by the stack; `pg` is the reference Postgres driver     |
+| Auth         | `better-auth`                                                                    | required by the stack (includes organization and Expo plugins)   |
+| Crypto       | `@noble/curves`                                                                  | Ed25519 that runs identically in Node, browsers and React Native |
+| QR           | `qrcode`, `@yudiel/react-qr-scanner`                                             | named in the brief                                               |
+| Typed client | `openapi-typescript`, `openapi-fetch`                                            | generated clients from OpenAPI, works in Expo                    |
+| Web          | `next`, `tailwindcss`, shadcn/ui, `next-intl`, `idb`, `@yudiel/react-qr-scanner` | stack; i18n; IndexedDB wrapper; QR scanning                      |
+| Email        | `nodemailer`                                                                     | required by the stack                                            |
+| Ops          | `pino`                                                                           | structured logging with redaction (rate limiter is in-house)     |
+| Tests        | `vitest`, `@playwright/test`                                                     | required by the stack                                            |
 
 ## 14. Runtime versions
 
