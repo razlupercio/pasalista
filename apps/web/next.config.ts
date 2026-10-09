@@ -42,6 +42,13 @@ const nextConfig: NextConfig = {
         source: "/:locale/t/:token",
         headers: [{ key: "Referrer-Policy", value: "no-referrer" }],
       },
+      // The camera is only allowed on the scanner (later rules override earlier ones).
+      {
+        source: "/:locale/scan/:path*",
+        headers: [
+          { key: "Permissions-Policy", value: "camera=(self), microphone=(), geolocation=()" },
+        ],
+      },
     ]);
   },
 };

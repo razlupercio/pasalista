@@ -5,6 +5,6 @@ import { routing } from "./i18n/routing.ts";
 export default createMiddleware(routing);
 
 export const config = {
-  // Everything except the API rewrite, Next.js internals and files with an extension.
-  matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"],
+  // Everything except the API rewrite, Next.js internals, generated icons and files with an extension.
+  matcher: ["/((?!api|_next|_vercel|icon|apple-icon|.*\\..*).*)"],
 };

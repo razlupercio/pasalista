@@ -99,7 +99,8 @@
     "staffEventsTitle": "Events where you are staff",
     "staffEventsHint": "You will check people in at these events with the scanner (coming in the next phase).",
     "team": "Team",
-    "activeOrganization": "Active organization"
+    "activeOrganization": "Active organization",
+    "scan": "Scan"
   },
   "events": {
     "status": {
@@ -167,7 +168,9 @@
       "security": "Security",
       "rotateKey": "Rotate signing key",
       "rotateKeyHint": "New tickets are signed with a new key. Tickets already issued stay valid.",
-      "rotateKeyDone": "Active signing key: version {version}."
+      "rotateKeyDone": "Active signing key: version {version}.",
+      "openScanner": "Open scanner",
+      "exportCsv": "Export CSV"
     },
     "attendees": {
       "title": "Attendees",
@@ -211,7 +214,13 @@
       "sendOne": "Send invitation",
       "resend": "Resend ticket",
       "resendConfirm": "The same QR will be emailed again with a new link. The previous link will stop working.",
-      "locale": "Email language"
+      "locale": "Email language",
+      "checkedIn": "Entry",
+      "filterCheckedIn": "Entry",
+      "checkedInYes": "Checked in",
+      "checkedInNo": "Not checked in",
+      "undoCheckIn": "Undo check-in",
+      "undoCheckInConfirm": "Undo this person's check-in? They can be scanned again."
     },
     "import": {
       "title": "Import guests",
@@ -253,6 +262,20 @@
       "removeConfirm": "Remove {name} from this event's staff?",
       "revoke": "Cancel invitation",
       "empty": "No staff for this event yet."
+    },
+    "stats": {
+      "title": "Live",
+      "checkedIn": "Inside",
+      "registered": "Registered",
+      "notCheckedIn": "Not in yet",
+      "pendingInvitations": "Invitations to send",
+      "repeatedScans": "Repeated QR scans",
+      "rejectedScans": "Rejected scans",
+      "recent": "Latest check-ins",
+      "noRecent": "Nobody has checked in yet.",
+      "manual": "manual",
+      "by": "by {name}",
+      "updated": "Updates automatically."
     }
   },
   "publicEvent": {
@@ -400,5 +423,39 @@
     "create": "Create",
     "created": "Organization created and selected.",
     "onlyAdmins": "Only owners and admins can invite or remove members."
+  },
+  "scanner": {
+    "title": "Scanner",
+    "scanTab": "Scan",
+    "searchTab": "Search",
+    "inside": "{checkedIn} of {registered} inside",
+    "cameraHint": "Point the camera at the ticket's QR code.",
+    "cameraError": "We could not use the camera. Check the browser permission or use manual search.",
+    "notOpenYet": "Check-in opens on {date}.",
+    "closed": "Check-in for this event has closed.",
+    "searchLabel": "Name or email",
+    "searchSubmit": "Search",
+    "searchHint": "Type at least 2 letters.",
+    "noMatches": "No matches.",
+    "checkInButton": "Check in",
+    "alreadyInside": "Checked in at {time}",
+    "tapToContinue": "Tap to continue",
+    "offline": "No connection to the server.",
+    "retry": "Retry",
+    "outcomes": {
+      "valid": "VALID",
+      "already_used": "ALREADY USED",
+      "invalid": "INVALID",
+      "wrong_event": "WRONG EVENT",
+      "revoked": "TICKET NOT VALID",
+      "outside_window": "OUTSIDE CHECK-IN HOURS"
+    },
+    "details": {
+      "already_used": "First check-in at {time}",
+      "invalid": "This code is not a PasaLista ticket.",
+      "wrong_event": "This ticket is for another event.",
+      "revoked": "The ticket was replaced, revoked or cancelled.",
+      "outside_window": "Check-in is not open right now."
+    }
   }
 }

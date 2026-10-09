@@ -30,6 +30,8 @@ ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000 HOSTNAME=0.0.0.0
 
 COPY --from=build --chown=node:node /app/apps/web/.next/standalone ./
 COPY --from=build --chown=node:node /app/apps/web/.next/static ./apps/web/.next/static
+# Static files, including the QR decoder WASM copied by the prebuild step.
+COPY --from=build --chown=node:node /app/apps/web/public ./apps/web/public
 
 USER node
 EXPOSE 3000

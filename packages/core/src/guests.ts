@@ -94,6 +94,7 @@ export const attendeeListQuerySchema = z.object({
   q: z.string().trim().max(100).optional(),
   status: z.enum(attendeeStatuses).optional(),
   ticket: z.enum(ticketFilters).optional(),
+  checkedIn: z.enum(["yes", "no"]).optional(),
   limit: z.coerce.number().int().min(1).max(500).default(100),
   offset: z.coerce.number().int().min(0).default(0),
 });

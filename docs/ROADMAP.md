@@ -79,6 +79,8 @@ can manage the organization's events, and a user from another organization canno
 - Dashboard: registered, checked in, no-shows, latest check-ins (polling), filterable
   list, CSV export.
 - Audit log for check-ins, ticket revocations, staff changes, event purge.
+- Decided during Phase 4a (ADR-0009): check-in from 6 h before the start to the end; only
+  organizers undo check-ins; staff see names and partial emails in manual search.
 
 Acceptance: a concurrency test firing N parallel check-ins for the same ticket yields
 exactly one `check_ins` row and N-1 `already_used` attempts; staff cannot access events

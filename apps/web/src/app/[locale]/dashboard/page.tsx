@@ -8,6 +8,7 @@ import { Link, redirect } from "@/i18n/navigation.ts";
 import { toLocale } from "@/i18n/routing.ts";
 import { serverApi } from "@/lib/api-server.ts";
 import { eventDateTimeOptions } from "@/lib/dates.ts";
+import { cn } from "@/lib/utils.ts";
 import { getActiveOrganization, getSession, listOrganizations } from "@/lib/session.ts";
 import { OrganizationSwitcher } from "@/components/organization-switcher.tsx";
 
@@ -130,6 +131,14 @@ export default async function DashboardPage({
                 <span className="text-sm text-muted-foreground">
                   {event.venueName} · {event.organizerName}
                 </span>
+                {event.status !== "draft" ? (
+                  <Link
+                    href={`/scan/${event.id}`}
+                    className={cn(buttonVariants(), "mt-2 self-start")}
+                  >
+                    {t("scan")}
+                  </Link>
+                ) : null}
               </li>
             ))}
           </ul>

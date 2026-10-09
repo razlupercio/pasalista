@@ -11,6 +11,7 @@ import { requestOrigin, serverApi } from "@/lib/api-server.ts";
 import { eventDateTimeOptions } from "@/lib/dates.ts";
 import { requireSession } from "@/lib/session.ts";
 import { GuestList } from "./guest-list.tsx";
+import { LiveStats } from "./live-stats.tsx";
 import { StaffPanel } from "./staff-panel.tsx";
 import { EventActions } from "./event-actions.tsx";
 
@@ -38,13 +39,15 @@ export default async function EventPage({
 
   const api = await serverApi();
   const path = { params: { path: { eventId } } };
-  const [{ data: event }, { data: attendees }, { data: staff }] = await Promise.all([
-    api.GET("/api/v1/events/{eventId}", path),
-    api.GET("/api/v1/events/{eventId}/attendees", {
-      params: { path: { eventId }, query: { limit: 50, offset: 0 } },
-    }),
-    api.GET("/api/v1/events/{eventId}/staff", path),
-  ]);
+  const [{ data: event }, { data: attendees }, { data: staff }, { data: stats }] =
+    await Promise.all([
+      api.GET("/api/v1/events/{eventId}", path),
+      api.GET("/api/v1/events/{eventId}/attendees", {
+        params: { path: { eventId }, query: { limit: 50, offset: 0 } },
+      }),
+      api.GET("/api/v1/events/{eventId}/staff", path),
+      api.GET("/api/v1/events/{eventId}/stats", path),
+    ]);
   if (!event) notFound();
 
   const [t, tEvents, tCommon, format, origin] = await Promise.all([
@@ -85,19 +88,40 @@ export default async function EventPage({
               })
             : tEvents("registeredCount", { count: event.registeredCount })}
         </p>
-        <div>
+        <div className="flex flex-wrap gap-3">
+          {event.status !== "draft" ? (
+            <Link href={`/scan/${event.id}`} className={buttonVariants()}>
+              {t("openScanner")}
+            </Link>
+          ) : null}
           <Link
             href={`/events/${event.id}/edit`}
             className={buttonVariants({ variant: "outline" })}
           >
             {t("edit")}
           </Link>
+          <a
+            href={`/api/v1/events/${event.id}/export.csv`}
+            download
+            className={buttonVariants({ variant: "outline" })}
+          >
+            {t("exportCsv")}
+          </a>
         </div>
       </div>
 
       <Card className="flex flex-col gap-4">
         <EventActions event={event} publicUrl={publicUrl} />
       </Card>
+
+      {stats && event.status !== "draft" ? (
+        <section aria-labelledby="stats-heading" className="flex flex-col gap-3">
+          <h2 id="stats-heading" className="text-xl font-semibold">
+            {tEvents("stats.title")}
+          </h2>
+          <LiveStats eventId={event.id} initial={stats} timeZone={event.timezone} />
+        </section>
+      ) : null}
 
       <section aria-labelledby="attendees-heading" className="flex flex-col gap-3">
         <h2 id="attendees-heading" className="text-xl font-semibold">
