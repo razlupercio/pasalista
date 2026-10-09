@@ -237,7 +237,8 @@
       "submit": "Add {count, plural, one {# guest} other {# guests}}",
       "done": "{count, plural, =0 {No guests were added.} one {# guest added.} other {# guests added.}}",
       "doneHint": "Review the list and send the invitations when you are ready.",
-      "backToEvent": "Back to event"
+      "backToEvent": "Back to event",
+      "fileTooLarge": "The file is larger than 1 MB. Split it into smaller files."
     },
     "staff": {
       "title": "Staff",

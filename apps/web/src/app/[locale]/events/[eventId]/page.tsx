@@ -10,7 +10,8 @@ import { toLocale } from "@/i18n/routing.ts";
 import { requestOrigin, serverApi } from "@/lib/api-server.ts";
 import { eventDateTimeOptions } from "@/lib/dates.ts";
 import { requireSession } from "@/lib/session.ts";
-import { AttendeesTable } from "./attendees-table.tsx";
+import { GuestList } from "./guest-list.tsx";
+import { StaffPanel } from "./staff-panel.tsx";
 import { EventActions } from "./event-actions.tsx";
 
 export async function generateMetadata({
@@ -37,9 +38,12 @@ export default async function EventPage({
 
   const api = await serverApi();
   const path = { params: { path: { eventId } } };
-  const [{ data: event }, { data: attendees }] = await Promise.all([
+  const [{ data: event }, { data: attendees }, { data: staff }] = await Promise.all([
     api.GET("/api/v1/events/{eventId}", path),
-    api.GET("/api/v1/events/{eventId}/attendees", path),
+    api.GET("/api/v1/events/{eventId}/attendees", {
+      params: { path: { eventId }, query: { limit: 50, offset: 0 } },
+    }),
+    api.GET("/api/v1/events/{eventId}/staff", path),
   ]);
   if (!event) notFound();
 
@@ -99,7 +103,18 @@ export default async function EventPage({
         <h2 id="attendees-heading" className="text-xl font-semibold">
           {tEvents("attendees.title")}
         </h2>
-        <AttendeesTable attendees={attendees ?? []} />
+        <GuestList
+          eventId={event.id}
+          eventStatus={event.status}
+          initial={attendees ?? { items: [], total: 0, pendingCount: 0 }}
+        />
+      </section>
+
+      <section aria-labelledby="staff-heading" className="flex flex-col gap-3">
+        <h2 id="staff-heading" className="text-xl font-semibold">
+          {tEvents("staff.title")}
+        </h2>
+        <StaffPanel eventId={event.id} staff={staff ?? { members: [], invitations: [] }} />
       </section>
     </div>
   );

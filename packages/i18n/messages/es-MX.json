@@ -237,7 +237,8 @@
       "submit": "Agregar {count, plural, one {# invitado} other {# invitados}}",
       "done": "{count, plural, =0 {No se agregó ningún invitado.} one {Se agregó # invitado.} other {Se agregaron # invitados.}}",
       "doneHint": "Revisa la lista y envía las invitaciones cuando estés listo.",
-      "backToEvent": "Volver al evento"
+      "backToEvent": "Volver al evento",
+      "fileTooLarge": "El archivo pesa más de 1 MB. Divídelo en archivos más pequeños."
     },
     "staff": {
       "title": "Staff",
