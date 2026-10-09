@@ -26,7 +26,7 @@ const { attendees, checkIns, checkInAttempts, tickets, users } = schema;
 
 type EventRow = typeof schema.events.$inferSelect;
 
-async function counts(db: Executor, eventId: string) {
+export async function counts(db: Executor, eventId: string) {
   const [checked] = await db
     .select({ value: count() })
     .from(checkIns)
@@ -34,7 +34,59 @@ async function counts(db: Executor, eventId: string) {
   return { checkedIn: checked?.value ?? 0, registered: await countActiveAttendees(db, eventId) };
 }
 
-function isScanOpen(event: EventRow, now: Date): boolean {
+export type Credential = { method: "qr"; token: string } | { method: "manual"; attendeeId: string };
+
+export type CredentialCheck =
+  | { ok: true; attendeeId: string; ticketId: string | null }
+  | { ok: false; outcome: "invalid" | "wrong_event" | "revoked"; attendeeId: string | null };
+
+/**
+ * Server-side credential check shared by online check-in and offline sync (ADR-0002 order):
+ * signature and key version, event, then the attendee's active ticket. Manual check-ins accept
+ * active attendees with a valid ticket or a pending invitation.
+ */
+export async function validateCredential(
+  db: Executor,
+  event: EventRow,
+  credential: Credential,
+): Promise<CredentialCheck> {
+  const lookup = (attendeeId: string) =>
+    db
+      .select({ attendee: attendees, ticket: tickets })
+      .from(attendees)
+      .leftJoin(tickets, and(eq(tickets.attendeeId, attendees.id), eq(tickets.status, "active")))
+      .where(and(eq(attendees.id, attendeeId), eq(attendees.eventId, event.id)));
+
+  if (credential.method === "qr") {
+    const publicKeys = (await verificationKeys(db, [event.id])).get(event.id) ?? new Map();
+    const check = verifyTicketToken(credential.token, { eventId: event.id, publicKeys });
+    if (!check.ok) {
+      const outcome = check.reason === "wrong_event" ? "wrong_event" : "invalid";
+      return { ok: false, outcome, attendeeId: null };
+    }
+    const [row] = await lookup(check.payload.attendeeId);
+    const valid =
+      row?.attendee.status === "active" &&
+      row.ticket !== null &&
+      row.ticket.keyVersion === check.payload.keyVersion &&
+      bytesEqual(row.ticket.nonce, check.payload.nonce);
+    if (!row || !valid) {
+      // Genuine signature but superseded, revoked or cancelled.
+      return { ok: false, outcome: "revoked", attendeeId: row ? check.payload.attendeeId : null };
+    }
+    return { ok: true, attendeeId: check.payload.attendeeId, ticketId: row.ticket!.id };
+  }
+
+  const [row] = await lookup(credential.attendeeId);
+  if (!row) return { ok: false, outcome: "invalid", attendeeId: null };
+  // Pending guests (invitation not sent yet) may enter; revoked or cancelled ones may not.
+  if (row.attendee.status !== "active" || (!row.ticket && !row.attendee.invitationPending)) {
+    return { ok: false, outcome: "revoked", attendeeId: credential.attendeeId };
+  }
+  return { ok: true, attendeeId: credential.attendeeId, ticketId: row.ticket?.id ?? null };
+}
+
+export function isScanOpen(event: EventRow, now: Date): boolean {
   if (event.status === "draft") return false;
   const { opensAt, closesAt } = checkInWindow(event);
   return now >= opensAt && now <= closesAt;
@@ -93,52 +145,12 @@ export async function checkIn(
     return respond("outside_window", null, null);
   }
 
-  // Resolve the attendee and make sure they hold a valid credential.
-  let attendeeId: string;
-  let ticketId: string | null;
-  if (request.method === "qr") {
-    const publicKeys = (await verificationKeys(deps.db, [event.id])).get(event.id) ?? new Map();
-    const check = verifyTicketToken(request.token, { eventId: event.id, publicKeys });
-    if (!check.ok) {
-      const outcome = check.reason === "wrong_event" ? "wrong_event" : "invalid";
-      await record(outcome, null);
-      return respond(outcome, null, null);
-    }
-    attendeeId = check.payload.attendeeId;
-    const [row] = await deps.db
-      .select({ attendee: attendees, ticket: tickets })
-      .from(attendees)
-      .leftJoin(tickets, and(eq(tickets.attendeeId, attendees.id), eq(tickets.status, "active")))
-      .where(and(eq(attendees.id, attendeeId), eq(attendees.eventId, event.id)));
-    const valid =
-      row?.attendee.status === "active" &&
-      row.ticket !== null &&
-      row.ticket.keyVersion === check.payload.keyVersion &&
-      bytesEqual(row.ticket.nonce, check.payload.nonce);
-    if (!row || !valid) {
-      // Genuine signature but superseded, revoked or cancelled.
-      await record("revoked", row ? attendeeId : null);
-      return respond("revoked", null, null);
-    }
-    ticketId = row.ticket!.id;
-  } else {
-    attendeeId = request.attendeeId;
-    const [row] = await deps.db
-      .select({ attendee: attendees, ticket: tickets })
-      .from(attendees)
-      .leftJoin(tickets, and(eq(tickets.attendeeId, attendees.id), eq(tickets.status, "active")))
-      .where(and(eq(attendees.id, attendeeId), eq(attendees.eventId, event.id)));
-    if (!row) {
-      await record("invalid", null);
-      return respond("invalid", null, null);
-    }
-    // Pending guests (invitation not sent yet) may enter; revoked or cancelled ones may not.
-    if (row.attendee.status !== "active" || (!row.ticket && !row.attendee.invitationPending)) {
-      await record("revoked", attendeeId);
-      return respond("revoked", null, null);
-    }
-    ticketId = row.ticket?.id ?? null;
+  const credential = await validateCredential(deps.db, event, request);
+  if (!credential.ok) {
+    await record(credential.outcome, credential.attendeeId);
+    return respond(credential.outcome, null, null);
   }
+  const { attendeeId, ticketId } = credential;
 
   const [attendee] = await deps.db
     .select({ id: attendees.id, name: attendees.name })
@@ -271,7 +283,7 @@ export async function eventStats(
   eventId: string,
 ): Promise<EventStats> {
   const event = await findManagedEvent(deps.db, userId, eventId);
-  const [{ checkedIn, registered }, [pending], attempts, recent] = await Promise.all([
+  const [{ checkedIn, registered }, [pending], attempts, recent, duplicates] = await Promise.all([
     counts(deps.db, event.id),
     deps.db
       .select({ value: count() })
@@ -302,6 +314,27 @@ export async function eventStats(
       .where(eq(checkIns.eventId, event.id))
       .orderBy(desc(checkIns.scannedAt))
       .limit(20),
+    deps.db
+      .select({
+        attendeeId: checkInAttempts.attendeeId,
+        name: attendees.name,
+        keptAt: checkIns.scannedAt,
+        duplicateAt: checkInAttempts.scannedAt,
+        scannedBy: users.name,
+        deviceId: checkInAttempts.deviceId,
+      })
+      .from(checkInAttempts)
+      .innerJoin(attendees, eq(attendees.id, checkInAttempts.attendeeId))
+      .innerJoin(checkIns, eq(checkIns.attendeeId, checkInAttempts.attendeeId))
+      .leftJoin(users, eq(users.id, checkInAttempts.scannedBy))
+      .where(
+        and(
+          eq(checkInAttempts.eventId, event.id),
+          eq(checkInAttempts.outcome, "duplicate_offline"),
+        ),
+      )
+      .orderBy(desc(checkInAttempts.receivedAt))
+      .limit(20),
   ]);
   const byOutcome = (...outcomes: CheckInOutcome[]) =>
     attempts
@@ -315,6 +348,14 @@ export async function eventStats(
     repeatedScans: byOutcome("already_used"),
     rejectedScans: byOutcome("invalid", "wrong_event", "revoked", "outside_window"),
     recent: recent.map((r) => ({ ...r, checkedInAt: r.checkedInAt.toISOString() })),
+    offlineDuplicates: duplicates.map((d) => ({
+      attendeeId: d.attendeeId!,
+      name: d.name,
+      keptAt: d.keptAt.toISOString(),
+      duplicateAt: d.duplicateAt.toISOString(),
+      scannedBy: d.scannedBy,
+      deviceId: d.deviceId,
+    })),
   };
 }
 

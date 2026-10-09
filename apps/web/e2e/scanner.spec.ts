@@ -2,11 +2,11 @@
 import { chromium, expect, test } from "@playwright/test";
 import { utcToZonedLocal } from "@pasalista/core";
 import { writeQrVideo } from "./fake-camera.ts";
-import { signUpOrganizer, uniqueEmail, useDistinctClientIp } from "./helpers.ts";
+import { signUpOrganizer, uniqueEmail, setDistinctClientIp } from "./helpers.ts";
 import { latestLinkFor } from "./mailpit.ts";
 
 test.beforeEach(async ({ page }) => {
-  await useDistinctClientIp(page);
+  await setDistinctClientIp(page);
 });
 
 test("scanning a ticket with the camera checks the guest in and updates the dashboard", async ({
@@ -59,7 +59,7 @@ test("scanning a ticket with the camera checks the guest in and updates the dash
     locale: "es-MX",
   });
   const scanner = await scannerContext.newPage();
-  await useDistinctClientIp(scanner);
+  await setDistinctClientIp(scanner);
   const thirdParty: string[] = [];
   scanner.on("request", (request) => {
     if (!request.url().startsWith(testInfo.project.use.baseURL ?? "http://localhost")) {

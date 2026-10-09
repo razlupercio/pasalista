@@ -103,6 +103,17 @@ export const eventStatsSchema = z.object({
   /** Scans of tickets that were already used (possible sharing of a QR). */
   repeatedScans: z.number().int(),
   rejectedScans: z.number().int(),
+  /** Same person checked in on two offline devices; the earliest scan was kept (ADR-0005). */
+  offlineDuplicates: z.array(
+    z.object({
+      attendeeId: z.uuid(),
+      name: z.string(),
+      keptAt: z.iso.datetime({ offset: true }),
+      duplicateAt: z.iso.datetime({ offset: true }),
+      scannedBy: z.string().nullable(),
+      deviceId: z.string().nullable(),
+    }),
+  ),
   recent: z.array(
     z.object({
       attendeeId: z.uuid(),

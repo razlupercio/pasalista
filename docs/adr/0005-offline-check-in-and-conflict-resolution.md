@@ -1,6 +1,6 @@
 # ADR-0005: Offline check-in and conflict resolution
 
-- Status: Draft (finalized in Phase 4b)
+- Status: Proposed (finalized in Phase 4b by ADR-0010)
 - Date: 2026-10-08
 
 ## Context

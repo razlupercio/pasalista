@@ -93,6 +93,35 @@ export function LiveStats({
           </ul>
         )}
       </div>
+      {stats.offlineDuplicates.length > 0 ? (
+        <div className="flex flex-col gap-2 rounded-lg border border-amber-500/50 p-3">
+          <h3 className="font-medium">{t("offlineDuplicates")}</h3>
+          <p className="text-sm text-muted-foreground">{t("offlineDuplicatesHint")}</p>
+          <ul className="flex flex-col gap-1 text-sm">
+            {stats.offlineDuplicates.map((d) => (
+              <li
+                key={`${d.attendeeId}-${d.duplicateAt}`}
+                className="flex flex-wrap justify-between gap-2"
+              >
+                <span>{d.name}</span>
+                <span className="text-muted-foreground">
+                  {t("kept", {
+                    time: format.dateTime(new Date(d.keptAt), { timeStyle: "medium", timeZone }),
+                  })}
+                  {" · "}
+                  {t("duplicate", {
+                    time: format.dateTime(new Date(d.duplicateAt), {
+                      timeStyle: "medium",
+                      timeZone,
+                    }),
+                  })}
+                  {d.scannedBy ? ` · ${t("by", { name: d.scannedBy })}` : ""}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       <p className="text-xs text-muted-foreground">{t("updated")}</p>
     </div>
   );

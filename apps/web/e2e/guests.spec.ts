@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { expect, test, type Page } from "@playwright/test";
-import { PASSWORD, signUpOrganizer, uniqueEmail, useDistinctClientIp } from "./helpers.ts";
+import { PASSWORD, signUpOrganizer, uniqueEmail, setDistinctClientIp } from "./helpers.ts";
 import { latestLinkFor } from "./mailpit.ts";
 
 test.beforeEach(async ({ page }) => {
-  await useDistinctClientIp(page);
+  await setDistinctClientIp(page);
 });
 
 async function createPublishedClosedEvent(page: Page, name: string): Promise<string> {
@@ -81,7 +81,7 @@ test("staff invitation: the invitee signs up from the link and sees the event", 
   const { link } = await latestLinkFor(staffEmail);
   const staffContext = await browser.newContext({ locale: "es-MX" });
   const staff = await staffContext.newPage();
-  await useDistinctClientIp(staff);
+  await setDistinctClientIp(staff);
   await staff.goto(link);
   await expect(staff.getByText("te invitó a validar la entrada en Congreso")).toBeVisible();
   await staff.getByRole("link", { name: "Crear cuenta" }).last().click();
@@ -123,7 +123,7 @@ test("team: a co-organizer joins and sees the organization's events", async ({
   const { link } = await latestLinkFor(teammateEmail);
   const context = await browser.newContext({ locale: "es-MX" });
   const teammate = await context.newPage();
-  await useDistinctClientIp(teammate);
+  await setDistinctClientIp(teammate);
   await teammate.goto(link);
   await teammate.getByRole("link", { name: "Crear cuenta" }).last().click();
   await teammate.getByLabel("Nombre").fill("Compañero");

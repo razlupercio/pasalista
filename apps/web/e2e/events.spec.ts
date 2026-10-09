@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { expect, test } from "@playwright/test";
-import { signUpOrganizer, uniqueEmail, useDistinctClientIp } from "./helpers.ts";
+import { signUpOrganizer, uniqueEmail, setDistinctClientIp } from "./helpers.ts";
 import { latestLinkFor } from "./mailpit.ts";
 
 test.beforeEach(async ({ page }) => {
-  await useDistinctClientIp(page);
+  await setDistinctClientIp(page);
 });
 
 test("organizer publishes an event, a guest registers, gets the QR by email and cancels", async ({
@@ -35,7 +35,7 @@ test("organizer publishes an event, a guest registers, gets the QR by email and 
   // A guest registers from another browser context.
   const guestContext = await browser.newContext({ locale: "es-MX" });
   const guest = await guestContext.newPage();
-  await useDistinctClientIp(guest);
+  await setDistinctClientIp(guest);
   const guestEmail = uniqueEmail(testInfo, "guest");
   await guest.goto(publicUrl);
   await expect(guest.getByText("Organiza: Ana López")).toBeVisible();

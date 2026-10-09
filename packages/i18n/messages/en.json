@@ -275,7 +275,11 @@
       "noRecent": "Nobody has checked in yet.",
       "manual": "manual",
       "by": "by {name}",
-      "updated": "Updates automatically."
+      "updated": "Updates automatically.",
+      "offlineDuplicates": "Offline duplicates",
+      "offlineDuplicatesHint": "The same person was checked in on two offline devices. The earliest check-in was kept.",
+      "kept": "kept {time}",
+      "duplicate": "duplicate {time}"
     }
   },
   "publicEvent": {
@@ -440,7 +444,7 @@
     "checkInButton": "Check in",
     "alreadyInside": "Checked in at {time}",
     "tapToContinue": "Tap to continue",
-    "offline": "No connection to the server.",
+    "offline": "Offline",
     "retry": "Retry",
     "outcomes": {
       "valid": "VALID",
@@ -456,6 +460,14 @@
       "wrong_event": "This ticket is for another event.",
       "revoked": "The ticket was replaced, revoked or cancelled.",
       "outside_window": "Check-in is not open right now."
-    }
+    },
+    "online": "Online",
+    "pending": "{count, plural, =0 {All synced} one {# check-in to sync} other {# check-ins to sync}}",
+    "bundleReady": "Ready to work offline · data from {time}",
+    "bundleMissing": "No offline data yet. Connect for a moment to download it.",
+    "offlineResult": "Checked in offline; it will sync when the connection is back.",
+    "duplicatesFound": "{count, plural, one {# check-in was duplicated on another device} other {# check-ins were duplicated on other devices}}; the earliest was kept.",
+    "rejectedOnSync": "{count, plural, one {# check-in was rejected} other {# check-ins were rejected}} when syncing (revoked or invalid ticket).",
+    "syncNow": "Sync now"
   }
 }

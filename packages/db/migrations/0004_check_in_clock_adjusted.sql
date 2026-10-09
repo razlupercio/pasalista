@@ -1,0 +1,1 @@
+ALTER TABLE "check_ins" ADD COLUMN "clock_adjusted" boolean DEFAULT false NOT NULL;

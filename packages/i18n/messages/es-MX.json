@@ -275,7 +275,11 @@
       "noRecent": "Todavía no entra nadie.",
       "manual": "manual",
       "by": "por {name}",
-      "updated": "Se actualiza automáticamente."
+      "updated": "Se actualiza automáticamente.",
+      "offlineDuplicates": "Duplicados sin conexión",
+      "offlineDuplicatesHint": "La misma persona se registró en dos dispositivos sin conexión. Se conservó la entrada más antigua.",
+      "kept": "conservada {time}",
+      "duplicate": "duplicada {time}"
     }
   },
   "publicEvent": {
@@ -440,7 +444,7 @@
     "checkInButton": "Registrar entrada",
     "alreadyInside": "Entró a las {time}",
     "tapToContinue": "Toca para continuar",
-    "offline": "Sin conexión con el servidor.",
+    "offline": "Sin conexión",
     "retry": "Reintentar",
     "outcomes": {
       "valid": "VÁLIDO",
@@ -456,6 +460,14 @@
       "wrong_event": "El boleto es de otro evento.",
       "revoked": "El boleto fue reemplazado, revocado o cancelado.",
       "outside_window": "El check-in no está abierto en este momento."
-    }
+    },
+    "online": "En línea",
+    "pending": "{count, plural, =0 {Todo sincronizado} one {# entrada por sincronizar} other {# entradas por sincronizar}}",
+    "bundleReady": "Listo para trabajar sin conexión · datos de las {time}",
+    "bundleMissing": "Aún no hay datos para trabajar sin conexión. Conéctate un momento para descargarlos.",
+    "offlineResult": "Registrado sin conexión; se sincronizará al volver la conexión.",
+    "duplicatesFound": "{count, plural, one {# entrada estaba duplicada en otro dispositivo} other {# entradas estaban duplicadas en otros dispositivos}}; se conservó la más antigua.",
+    "rejectedOnSync": "{count, plural, one {# entrada fue rechazada} other {# entradas fueron rechazadas}} al sincronizar (boleto revocado o inválido).",
+    "syncNow": "Sincronizar ahora"
   }
 }

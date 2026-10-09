@@ -13,7 +13,7 @@ export function uniqueEmail(testInfo: Pick<TestInfo, "project">, label = "e2e"):
  * Each page acts as a different client so per-IP rate limits do not interfere. The stack must
  * run with TRUSTED_PROXY_HOPS=1 for the API to honour this header (see README).
  */
-export async function useDistinctClientIp(page: Page): Promise<void> {
+export async function setDistinctClientIp(page: Page): Promise<void> {
   const octet = () => Math.floor(Math.random() * 254) + 1;
   await page.setExtraHTTPHeaders({ "x-forwarded-for": `198.18.${octet()}.${octet()}` });
 }

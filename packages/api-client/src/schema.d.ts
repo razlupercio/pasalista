@@ -577,6 +577,17 @@ export interface paths {
                             pendingInvitations: number;
                             repeatedScans: number;
                             rejectedScans: number;
+                            offlineDuplicates: {
+                                /** Format: uuid */
+                                attendeeId: string;
+                                name: string;
+                                /** Format: date-time */
+                                keptAt: string;
+                                /** Format: date-time */
+                                duplicateAt: string;
+                                scannedBy: string | null;
+                                deviceId: string | null;
+                            }[];
                             recent: {
                                 /** Format: uuid */
                                 attendeeId: string;
@@ -645,6 +656,278 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{eventId}/offline-bundle": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Data a scanner stores to work offline (public keys, minimal attendee list) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    eventId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Bundle */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            event: {
+                                /** Format: uuid */
+                                id: string;
+                                name: string;
+                                timezone: string;
+                                /** Format: date-time */
+                                opensAt: string;
+                                /** Format: date-time */
+                                closesAt: string;
+                            };
+                            keys: {
+                                version: number;
+                                publicKey: string;
+                            }[];
+                            attendees: {
+                                /** Format: uuid */
+                                id: string;
+                                displayName: string;
+                                nonce: string | null;
+                                manualAllowed: boolean;
+                                /** Format: date-time */
+                                checkedInAt: string | null;
+                            }[];
+                            /** Format: date-time */
+                            generatedAt: string;
+                        };
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{eventId}/check-ins/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload offline check-ins; idempotent, earliest scan wins on conflicts */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    eventId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        deviceId: string;
+                        items: ({
+                            /** @enum {string} */
+                            method: "qr";
+                            /** Format: uuid */
+                            clientCheckInId: string;
+                            token: string;
+                            /** Format: date-time */
+                            scannedAt: string;
+                        } | {
+                            /** @enum {string} */
+                            method: "manual";
+                            /** Format: uuid */
+                            clientCheckInId: string;
+                            /** Format: uuid */
+                            attendeeId: string;
+                            /** Format: date-time */
+                            scannedAt: string;
+                        })[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Per-item results */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            results: {
+                                /** Format: uuid */
+                                clientCheckInId: string;
+                                /** @enum {string} */
+                                status: "accepted" | "duplicate" | "rejected";
+                                outcome: string | null;
+                                /** Format: date-time */
+                                checkedInAt: string | null;
+                            }[];
+                            counts: {
+                                checkedIn: number;
+                                registered: number;
+                            };
+                        };
+                    };
+                };
+                /** @description Invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Rate limited */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;

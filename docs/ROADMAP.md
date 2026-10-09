@@ -88,7 +88,7 @@ they are not assigned to.
 
 ## Phase 4b: Offline mode
 
-- Service worker (Serwist) and IndexedDB bundle download ("prepare for offline").
+- Service worker (hand-written, ADR-0010) and IndexedDB bundle download ("prepare for offline").
 - Local verification with `packages/core`; local queue with `clientCheckInId`,
   `scannedAt`, `deviceId`; automatic sync with backoff.
 - Server sync endpoint and conflict resolution (ADR-0005), duplicates on the dashboard.

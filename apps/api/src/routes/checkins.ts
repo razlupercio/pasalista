@@ -4,9 +4,12 @@ import {
   checkInRequestSchema,
   checkInResultSchema,
   eventStatsSchema,
+  offlineBundleSchema,
   scanContextSchema,
   scanSearchQuerySchema,
   scanSearchResultSchema,
+  syncRequestSchema,
+  syncResultSchema,
 } from "@pasalista/core";
 import { etag } from "hono/etag";
 import { rateLimit, type RateLimitStore } from "../middleware/rate-limit.ts";
@@ -19,6 +22,7 @@ import {
   undoCheckIn,
 } from "../services/checkins.ts";
 import type { ServiceDeps } from "../services/context.ts";
+import { offlineBundle, syncCheckIns } from "../services/offline.ts";
 import type { AuthedEnv } from "../types.ts";
 import { pickErrors } from "./openapi.ts";
 
@@ -82,6 +86,28 @@ const routes = {
       ...pickErrors(401, 404),
     },
   }),
+  offlineBundle: createRoute({
+    method: "get",
+    path: "/{eventId}/offline-bundle",
+    tags,
+    summary: "Data a scanner stores to work offline (public keys, minimal attendee list)",
+    request: { params: eventParams },
+    responses: {
+      200: { description: "Bundle", content: json(offlineBundleSchema) },
+      ...pickErrors(401, 404),
+    },
+  }),
+  sync: createRoute({
+    method: "post",
+    path: "/{eventId}/check-ins/sync",
+    tags,
+    summary: "Upload offline check-ins; idempotent, earliest scan wins on conflicts",
+    request: { params: eventParams, body: { content: json(syncRequestSchema), required: true } },
+    responses: {
+      200: { description: "Per-item results", content: json(syncResultSchema) },
+      ...pickErrors(400, 401, 404, 429),
+    },
+  }),
   exportCsv: createRoute({
     method: "get",
     path: "/{eventId}/export.csv",
@@ -110,6 +136,11 @@ export function registerCheckInRoutes(
   app.use(
     "/:eventId/scan-search",
     rateLimit({ name: "scan-search", windowMs: 60_000, max: 60, ...options }),
+  );
+  app.on(
+    "POST",
+    "/:eventId/check-ins/sync",
+    rateLimit({ name: "check-in-sync", windowMs: 60_000, max: 60, ...options }),
   );
   app.use("/:eventId/stats", etag({ weak: true }));
 
@@ -140,6 +171,15 @@ export function registerCheckInRoutes(
   });
   app.openapi(routes.stats, async (c) =>
     c.json(await eventStats(deps, c.get("user").id, c.req.valid("param").eventId), 200),
+  );
+  app.openapi(routes.offlineBundle, async (c) =>
+    c.json(await offlineBundle(deps, c.get("user").id, c.req.valid("param").eventId), 200),
+  );
+  app.openapi(routes.sync, async (c) =>
+    c.json(
+      await syncCheckIns(deps, c.get("user"), c.req.valid("param").eventId, c.req.valid("json")),
+      200,
+    ),
   );
   app.openapi(routes.exportCsv, async (c) => {
     const { filename, csv } = await exportAttendeesCsv(

@@ -6,6 +6,7 @@ import { useTransition } from "react";
 import { Button } from "@/components/ui/button.tsx";
 import { useRouter } from "@/i18n/navigation.ts";
 import { authClient } from "@/lib/auth-client.ts";
+import { clearOfflineData } from "@/lib/offline-store.ts";
 
 export function SignOutButton({ className }: { className?: string }) {
   const t = useTranslations("nav");
@@ -19,6 +20,8 @@ export function SignOutButton({ className }: { className?: string }) {
       disabled={pending}
       onClick={() =>
         startTransition(async () => {
+          // Scanner data (bundles, queues, cached pages) must not outlive the session.
+          await clearOfflineData();
           await authClient.signOut();
           router.replace("/");
           router.refresh();

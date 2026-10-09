@@ -22,10 +22,12 @@ function windowStateNow(window: { opensAt: string; closesAt: string }) {
 
 export default async function ScanPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; eventId: string }>;
+  searchParams: Promise<{ mode?: string }>;
 }) {
-  const { locale: rawLocale, eventId } = await params;
+  const [{ locale: rawLocale, eventId }, { mode }] = await Promise.all([params, searchParams]);
   const locale = toLocale(rawLocale);
   setRequestLocale(locale);
   await requireSession(locale, `/scan/${eventId}`);
@@ -36,5 +38,11 @@ export default async function ScanPage({
   });
   if (!context) notFound();
 
-  return <ScannerApp context={context} windowState={windowStateNow(context.window)} />;
+  return (
+    <ScannerApp
+      context={context}
+      windowState={windowStateNow(context.window)}
+      initialTab={mode === "search" ? "search" : "scan"}
+    />
+  );
 }

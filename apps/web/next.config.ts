@@ -42,6 +42,8 @@ const nextConfig: NextConfig = {
         source: "/:locale/t/:token",
         headers: [{ key: "Referrer-Policy", value: "no-referrer" }],
       },
+      // The service worker must be revalidated so updates reach scanners quickly.
+      { source: "/sw.js", headers: [{ key: "Cache-Control", value: "no-cache" }] },
       // The camera is only allowed on the scanner (later rules override earlier ones).
       {
         source: "/:locale/scan/:path*",
