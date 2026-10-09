@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { browserApi } from "@/lib/api-browser.ts";
 import { deviceId, scanFeedback } from "@/lib/scan-feedback.ts";
+import { useOfflineScanner } from "@/lib/use-offline-scanner.ts";
 import { cn, formText } from "@/lib/utils.ts";
 
 // Load the QR decoder from our own origin (copied by scripts/copy-zxing.ts), never a CDN.
@@ -21,6 +22,9 @@ setZXingModuleOverrides({
 
 /** A check-in before the device adds its client id and device id. */
 type Pending = { method: "qr"; token: string } | { method: "manual"; attendeeId: string };
+
+/** What the result screen shows; `offline` marks results decided on the device. */
+type Shown = CheckInResult & { offline: boolean };
 
 const tones: Record<CheckInResult["outcome"], string> = {
   valid: "bg-green-700 text-white",
@@ -33,59 +37,106 @@ const tones: Record<CheckInResult["outcome"], string> = {
 
 /** Same QR read again within this time is ignored (the camera keeps seeing it). */
 const REPEAT_GUARD_MS = 4_000;
+/** Beyond this the device decides on its own (offline mode). */
+const ONLINE_TIMEOUT_MS = 5_000;
+
+function normalize(text: string): string {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036F]/g, "")
+    .toLowerCase();
+}
 
 export function ScannerApp({
   context,
   windowState,
+  initialTab = "scan",
 }: {
   context: ScanContext;
   /** Computed on the server at request time. */
   windowState: "before" | "open" | "after";
+  initialTab?: "scan" | "search";
 }) {
   const t = useTranslations("scanner");
   const format = useFormatter();
-  const [tab, setTab] = useState<"scan" | "search">("scan");
+  const [tab, setTab] = useState<"scan" | "search">(initialTab);
   const [counts, setCounts] = useState(context.counts);
-  const [result, setResult] = useState<CheckInResult | null>(null);
+  const [result, setResult] = useState<Shown | null>(null);
   const [failed, setFailed] = useState<{ request: Pending; clientCheckInId: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [cameraError, setCameraError] = useState(false);
   const [matches, setMatches] = useState<ScanSearchResult | null>(null);
   const lastScan = useRef<{ token: string; at: number } | null>(null);
   const dismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const offline = useOfflineScanner(context.event.id, setCounts);
 
   const time = (iso: string) =>
     format.dateTime(new Date(iso), { timeStyle: "short", timeZone: context.event.timezone });
-  const opensAt = Date.parse(context.window.opensAt);
+
+  function show(shown: Shown) {
+    setResult(shown);
+    scanFeedback(shown.outcome);
+    if (dismissTimer.current) clearTimeout(dismissTimer.current);
+    dismissTimer.current = setTimeout(
+      () => setResult(null),
+      shown.outcome === "valid" ? 2_000 : 4_000,
+    );
+  }
 
   function dismiss() {
     if (dismissTimer.current) clearTimeout(dismissTimer.current);
     setResult(null);
   }
 
+  async function decideOffline(
+    request: Pending,
+    retry: { request: Pending; clientCheckInId: string },
+  ) {
+    offline.setOnline(false);
+    const scan = await offline.checkInOffline(request);
+    if (!scan) {
+      // No offline data for this event: the scan cannot be verified anywhere.
+      setFailed(retry);
+      return;
+    }
+    if (scan.outcome === "valid") setCounts((c) => ({ ...c, checkedIn: c.checkedIn + 1 }));
+    show({
+      outcome: scan.outcome,
+      attendee: scan.attendee ? { id: scan.attendee.id, name: scan.attendee.displayName } : null,
+      checkedInAt:
+        scan.outcome === "valid" ? new Date().toISOString() : (scan.attendee?.checkedInAt ?? null),
+      counts,
+      offline: true,
+    });
+  }
+
   async function submit(request: Pending, clientCheckInId: string = crypto.randomUUID()) {
     setBusy(true);
     setFailed(null);
-    const { data } = await browserApi
-      .POST("/api/v1/events/{eventId}/check-ins", {
+    try {
+      const { data, response } = await browserApi.POST("/api/v1/events/{eventId}/check-ins", {
         params: { path: { eventId: context.event.id } },
         body: { ...request, clientCheckInId, deviceId: deviceId() },
-      })
-      .catch(() => ({ data: undefined }));
-    setBusy(false);
-    if (!data) {
-      // Retrying reuses the same client id, so a request that did reach the server is not doubled.
-      setFailed({ request, clientCheckInId });
-      return;
+        signal: AbortSignal.timeout(ONLINE_TIMEOUT_MS),
+      });
+      if (data) {
+        offline.setOnline(true);
+        setCounts(data.counts);
+        if (data.attendee && (data.outcome === "valid" || data.outcome === "already_used")) {
+          await offline.rememberCheckIn(data.attendee.id);
+        }
+        show({ ...data, offline: false });
+      } else if (response.status >= 500) {
+        await decideOffline(request, { request, clientCheckInId });
+      } else {
+        setFailed({ request, clientCheckInId });
+      }
+    } catch {
+      // Network down or too slow: decide on the device (ADR-0005).
+      await decideOffline(request, { request, clientCheckInId });
+    } finally {
+      setBusy(false);
     }
-    setCounts(data.counts);
-    setResult(data);
-    scanFeedback(data.outcome);
-    if (dismissTimer.current) clearTimeout(dismissTimer.current);
-    dismissTimer.current = setTimeout(
-      () => setResult(null),
-      data.outcome === "valid" ? 2_000 : 4_000,
-    );
   }
 
   function onCode(token: string) {
@@ -100,10 +151,31 @@ export function ScannerApp({
     event.preventDefault();
     const q = formText(new FormData(event.currentTarget), "q").trim();
     if (q.length < 2) return;
-    const { data } = await browserApi.GET("/api/v1/events/{eventId}/scan-search", {
-      params: { path: { eventId: context.event.id }, query: { q } },
-    });
-    setMatches(data ?? []);
+    if (offline.online) {
+      try {
+        const { data } = await browserApi.GET("/api/v1/events/{eventId}/scan-search", {
+          params: { path: { eventId: context.event.id }, query: { q } },
+          signal: AbortSignal.timeout(ONLINE_TIMEOUT_MS),
+        });
+        setMatches(data ?? []);
+        return;
+      } catch {
+        offline.setOnline(false);
+      }
+    }
+    // Offline: search the short names stored on the device.
+    const needle = normalize(q);
+    setMatches(
+      (offline.bundle?.attendees ?? [])
+        .filter((a) => normalize(a.displayName).includes(needle))
+        .slice(0, 20)
+        .map((a) => ({
+          id: a.id,
+          name: a.displayName,
+          maskedEmail: "",
+          checkedInAt: a.checkedInAt,
+        })),
+    );
   }
 
   return (
@@ -113,12 +185,46 @@ export function ScannerApp({
         <p className="text-sm font-medium" aria-live="polite">
           {t("inside", counts)}
         </p>
+        <p className="flex flex-wrap items-center gap-2 text-xs" role="status">
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-medium",
+              offline.online
+                ? "border-success/50 text-success"
+                : "border-destructive/50 text-destructive",
+            )}
+          >
+            {offline.online ? t("online") : t("offline")}
+          </span>
+          <span>{t("pending", { count: offline.pendingCount })}</span>
+          {offline.pendingCount > 0 && offline.online ? (
+            <Button variant="link" className="text-xs" onClick={() => void offline.sync()}>
+              {t("syncNow")}
+            </Button>
+          ) : null}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          {offline.bundle
+            ? t("bundleReady", { time: time(offline.bundle.generatedAt) })
+            : t("bundleMissing")}
+        </p>
       </header>
+
+      {offline.summary ? (
+        <Alert className="flex flex-col gap-1">
+          {offline.summary.duplicates > 0 ? (
+            <span>{t("duplicatesFound", { count: offline.summary.duplicates })}</span>
+          ) : null}
+          {offline.summary.rejected > 0 ? (
+            <span>{t("rejectedOnSync", { count: offline.summary.rejected })}</span>
+          ) : null}
+        </Alert>
+      ) : null}
 
       {windowState === "before" ? (
         <Alert>
           {t("notOpenYet", {
-            date: format.dateTime(new Date(opensAt), {
+            date: format.dateTime(new Date(context.window.opensAt), {
               dateStyle: "full",
               timeStyle: "short",
               timeZone: context.event.timezone,
@@ -145,7 +251,7 @@ export function ScannerApp({
 
       {failed ? (
         <Alert tone="error" className="flex items-center justify-between gap-3">
-          <span>{t("offline")}</span>
+          <span>{t("bundleMissing")}</span>
           <Button
             variant="outline"
             className="min-h-9"
@@ -217,7 +323,9 @@ export function ScannerApp({
               >
                 <span className="flex flex-col">
                   <span className="font-medium">{match.name}</span>
-                  <span className="text-sm text-muted-foreground">{match.maskedEmail}</span>
+                  {match.maskedEmail ? (
+                    <span className="text-sm text-muted-foreground">{match.maskedEmail}</span>
+                  ) : null}
                   {match.checkedInAt ? (
                     <span className="text-sm text-muted-foreground">
                       {t("alreadyInside", { time: time(match.checkedInAt) })}
@@ -268,6 +376,9 @@ export function ScannerApp({
             </span>
           ) : result.outcome !== "valid" && result.outcome !== "already_used" ? (
             <span className="text-lg">{t(`details.${result.outcome}`)}</span>
+          ) : null}
+          {result.offline && result.outcome === "valid" ? (
+            <span className="text-base">{t("offlineResult")}</span>
           ) : null}
           <span className="text-sm opacity-80">{t("tapToContinue")}</span>
         </button>

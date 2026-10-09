@@ -51,6 +51,10 @@ export default tseslint.config(
     ...tseslint.configs.disableTypeChecked,
   },
   {
+    files: ["apps/web/public/sw.js"],
+    languageOptions: { globals: { ...globals.serviceworker } },
+  },
+  {
     // packages/core must run unchanged on Node, browsers and React Native.
     files: ["packages/core/src/**/*.ts"],
     languageOptions: { globals: {} },
