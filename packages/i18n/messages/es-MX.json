@@ -99,7 +99,8 @@
     "staffEventsTitle": "Eventos donde eres staff",
     "staffEventsHint": "Validarás la entrada en estos eventos con el escáner (disponible en la siguiente fase).",
     "team": "Equipo",
-    "activeOrganization": "Organización activa"
+    "activeOrganization": "Organización activa",
+    "scan": "Escanear"
   },
   "events": {
     "status": {
@@ -167,7 +168,9 @@
       "security": "Seguridad",
       "rotateKey": "Rotar llave de firma",
       "rotateKeyHint": "Los boletos nuevos se firman con una llave nueva. Los boletos ya emitidos siguen siendo válidos.",
-      "rotateKeyDone": "Llave de firma activa: versión {version}."
+      "rotateKeyDone": "Llave de firma activa: versión {version}.",
+      "openScanner": "Abrir escáner",
+      "exportCsv": "Exportar CSV"
     },
     "attendees": {
       "title": "Asistentes",
@@ -211,7 +214,13 @@
       "sendOne": "Enviar invitación",
       "resend": "Reenviar boleto",
       "resendConfirm": "Se enviará de nuevo el mismo QR con un enlace nuevo. El enlace anterior dejará de funcionar.",
-      "locale": "Idioma del correo"
+      "locale": "Idioma del correo",
+      "checkedIn": "Entrada",
+      "filterCheckedIn": "Entrada",
+      "checkedInYes": "Ya entró",
+      "checkedInNo": "No ha entrado",
+      "undoCheckIn": "Anular entrada",
+      "undoCheckInConfirm": "¿Anular la entrada de esta persona? Podrá volver a escanearse."
     },
     "import": {
       "title": "Importar invitados",
@@ -253,6 +262,20 @@
       "removeConfirm": "¿Quitar a {name} del staff de este evento?",
       "revoke": "Cancelar invitación",
       "empty": "Aún no hay staff en este evento."
+    },
+    "stats": {
+      "title": "En vivo",
+      "checkedIn": "Dentro",
+      "registered": "Registrados",
+      "notCheckedIn": "Sin entrar",
+      "pendingInvitations": "Invitaciones por enviar",
+      "repeatedScans": "QR repetidos",
+      "rejectedScans": "Escaneos rechazados",
+      "recent": "Últimas entradas",
+      "noRecent": "Todavía no entra nadie.",
+      "manual": "manual",
+      "by": "por {name}",
+      "updated": "Se actualiza automáticamente."
     }
   },
   "publicEvent": {
@@ -400,5 +423,39 @@
     "create": "Crear",
     "created": "Organización creada y seleccionada.",
     "onlyAdmins": "Solo propietarios y administradores pueden invitar o quitar miembros."
+  },
+  "scanner": {
+    "title": "Escáner",
+    "scanTab": "Escanear",
+    "searchTab": "Buscar",
+    "inside": "{checkedIn} de {registered} dentro",
+    "cameraHint": "Apunta la cámara al código QR del boleto.",
+    "cameraError": "No pudimos usar la cámara. Revisa el permiso del navegador o usa la búsqueda manual.",
+    "notOpenYet": "El check-in abre el {date}.",
+    "closed": "El check-in de este evento ya cerró.",
+    "searchLabel": "Nombre o correo",
+    "searchSubmit": "Buscar",
+    "searchHint": "Escribe al menos 2 letras.",
+    "noMatches": "Sin resultados.",
+    "checkInButton": "Registrar entrada",
+    "alreadyInside": "Entró a las {time}",
+    "tapToContinue": "Toca para continuar",
+    "offline": "Sin conexión con el servidor.",
+    "retry": "Reintentar",
+    "outcomes": {
+      "valid": "VÁLIDO",
+      "already_used": "YA UTILIZADO",
+      "invalid": "INVÁLIDO",
+      "wrong_event": "EVENTO INCORRECTO",
+      "revoked": "BOLETO NO VÁLIDO",
+      "outside_window": "FUERA DE HORARIO"
+    },
+    "details": {
+      "already_used": "Primera entrada a las {time}",
+      "invalid": "Este código no es un boleto de PasaLista.",
+      "wrong_event": "El boleto es de otro evento.",
+      "revoked": "El boleto fue reemplazado, revocado o cancelado.",
+      "outside_window": "El check-in no está abierto en este momento."
+    }
   }
 }
