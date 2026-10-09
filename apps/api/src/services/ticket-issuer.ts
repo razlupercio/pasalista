@@ -76,6 +76,7 @@ function ticketEmailRow(
     toEmail: attendee.email,
     locale: attendee.locale,
     organizationId: event.organizationId,
+    eventId: event.id,
     payload,
   };
 }

@@ -9,6 +9,7 @@ import {
   guestInputSchema,
   importReportSchema,
   importRequestSchema,
+  purgeEventInputSchema,
   sendInvitationsResultSchema,
   staffInviteInputSchema,
   staffOverviewSchema,
@@ -36,6 +37,7 @@ import {
   revokeTicket,
   sendPendingInvitations,
 } from "../services/guests.ts";
+import { purgeEventData } from "../services/purge.ts";
 import { getStaff, inviteStaff, removeStaff, revokeStaffInvitation } from "../services/staff.ts";
 import type { RateLimitStore } from "../middleware/rate-limit.ts";
 import type { AuthedEnv } from "../types.ts";
@@ -116,6 +118,20 @@ const routes = {
     responses: {
       200: { description: "Closed", content: json(eventSchema) },
       ...pickErrors(401, 404, 409),
+    },
+  }),
+  purge: createRoute({
+    method: "post",
+    path: "/{eventId}/purge",
+    tags,
+    summary: "Irreversibly delete the personal data of a closed event (owners and admins)",
+    request: {
+      params: eventParams,
+      body: { content: json(purgeEventInputSchema), required: true },
+    },
+    responses: {
+      200: { description: "Purged; only totals remain", content: json(eventSchema) },
+      ...pickErrors(400, 401, 403, 404, 409),
     },
   }),
   rotateKey: createRoute({
@@ -259,6 +275,17 @@ export function eventRoutes(
     )
     .openapi(routes.close, async (c) =>
       c.json(await changeEventStatus(deps, userId(c), c.req.valid("param").eventId, "close"), 200),
+    )
+    .openapi(routes.purge, async (c) =>
+      c.json(
+        await purgeEventData(
+          deps,
+          userId(c),
+          c.req.valid("param").eventId,
+          c.req.valid("json").confirmSlug,
+        ),
+        200,
+      ),
     )
     .openapi(routes.rotateKey, async (c) =>
       c.json({ version: await rotateEventKey(deps, userId(c), c.req.valid("param").eventId) }, 200),

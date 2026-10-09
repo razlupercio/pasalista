@@ -36,6 +36,13 @@
       "when": 1791520557994,
       "tag": "0004_check_in_clock_adjusted",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791523010028,
+      "tag": "0005_event_purge",
+      "breakpoints": true
     }
   ]
 }

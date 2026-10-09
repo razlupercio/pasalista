@@ -9,7 +9,7 @@ import { ApiError } from "../errors.ts";
 import { nowOf, type ServiceDeps } from "./context.ts";
 import { organizerName } from "./attendees.ts";
 import { audit } from "./audit.ts";
-import { findManagedEvent } from "./events.ts";
+import { assertNotPurged, findManagedEvent } from "./events.ts";
 
 const { eventStaff, events, organizations, staffInvitations, users } = schema;
 
@@ -64,6 +64,7 @@ export async function inviteStaff(
 ): Promise<void> {
   await deps.db.transaction(async (tx) => {
     const event = await findManagedEvent(tx, inviter.id, eventId, { forUpdate: true });
+    assertNotPurged(event);
     const [already] = await tx
       .select({ userId: eventStaff.userId })
       .from(eventStaff)
@@ -98,6 +99,7 @@ export async function inviteStaff(
       to: input.email,
       locale: input.locale,
       organizationId: event.organizationId,
+      eventId,
       payload: {
         inviterName: inviter.name,
         eventName: event.name,

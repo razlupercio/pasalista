@@ -1083,6 +1083,9 @@ export interface paths {
                             status: "draft" | "published" | "closed";
                             registeredCount: number;
                             /** Format: date-time */
+                            purgedAt: string | null;
+                            checkedInCount: number;
+                            /** Format: date-time */
                             createdAt: string;
                             /** Format: date-time */
                             updatedAt: string;
@@ -1212,6 +1215,9 @@ export interface paths {
                             /** @enum {string} */
                             status: "draft" | "published" | "closed";
                             registeredCount: number;
+                            /** Format: date-time */
+                            purgedAt: string | null;
+                            checkedInCount: number;
                             /** Format: date-time */
                             createdAt: string;
                             /** Format: date-time */
@@ -1360,6 +1366,9 @@ export interface paths {
                             /** @enum {string} */
                             status: "draft" | "published" | "closed";
                             registeredCount: number;
+                            /** Format: date-time */
+                            purgedAt: string | null;
+                            checkedInCount: number;
                             /** Format: date-time */
                             createdAt: string;
                             /** Format: date-time */
@@ -1605,6 +1614,9 @@ export interface paths {
                             status: "draft" | "published" | "closed";
                             registeredCount: number;
                             /** Format: date-time */
+                            purgedAt: string | null;
+                            checkedInCount: number;
+                            /** Format: date-time */
                             createdAt: string;
                             /** Format: date-time */
                             updatedAt: string;
@@ -1750,6 +1762,9 @@ export interface paths {
                             /** @enum {string} */
                             status: "draft" | "published" | "closed";
                             registeredCount: number;
+                            /** Format: date-time */
+                            purgedAt: string | null;
+                            checkedInCount: number;
                             /** Format: date-time */
                             createdAt: string;
                             /** Format: date-time */
@@ -1901,6 +1916,9 @@ export interface paths {
                             status: "draft" | "published" | "closed";
                             registeredCount: number;
                             /** Format: date-time */
+                            purgedAt: string | null;
+                            checkedInCount: number;
+                            /** Format: date-time */
                             createdAt: string;
                             /** Format: date-time */
                             updatedAt: string;
@@ -1909,6 +1927,210 @@ export interface paths {
                 };
                 /** @description Not signed in */
                 401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Conflicts with the current state */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{eventId}/purge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Irreversibly delete the personal data of a closed event (owners and admins) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    eventId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        confirmSlug: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Purged; only totals remain */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            organizationId: string;
+                            slug: string;
+                            name: string;
+                            description: string | null;
+                            /** Format: date-time */
+                            startsAt: string;
+                            /** Format: date-time */
+                            endsAt: string | null;
+                            timezone: string;
+                            venueName: string;
+                            venueAddress: string | null;
+                            capacity: number | null;
+                            /** @enum {string} */
+                            registrationMode: "open" | "closed";
+                            /** Format: date-time */
+                            registrationDeadline: string | null;
+                            registrationFields: ({
+                                /** @enum {string} */
+                                type: "text";
+                                key: string;
+                                label: string;
+                                required: boolean;
+                            } | {
+                                /** @enum {string} */
+                                type: "select";
+                                key: string;
+                                label: string;
+                                required: boolean;
+                                options: string[];
+                            } | {
+                                /** @enum {string} */
+                                type: "checkbox";
+                                key: string;
+                                label: string;
+                                required: boolean;
+                            })[];
+                            /** @enum {string} */
+                            status: "draft" | "published" | "closed";
+                            registeredCount: number;
+                            /** Format: date-time */
+                            purgedAt: string | null;
+                            checkedInCount: number;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
+                /** @description Invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": {
+                            type: string;
+                            title: string;
+                            status: number;
+                            /** @enum {string} */
+                            code: "bad_request" | "validation_failed" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "rate_limited" | "invalid_origin" | "internal_error" | "invalid_state" | "registration_closed" | "event_full" | "already_registered";
+                            detail?: string;
+                            instance?: string;
+                            requestId?: string;
+                            issues?: {
+                                path: (string | number)[];
+                                message: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Not allowed */
+                403: {
                     headers: {
                         [name: string]: unknown;
                     };

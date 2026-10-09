@@ -23,7 +23,15 @@ export function retryDelayMs(attempts: number): number {
 
 export async function enqueueEmail<K extends EmailKind>(
   db: Pick<Database, "insert">,
-  email: { kind: K; to: string; locale: string; payload: EmailPayload<K>; organizationId?: string },
+  email: {
+    kind: K;
+    to: string;
+    locale: string;
+    payload: EmailPayload<K>;
+    organizationId?: string;
+    /** Event emails carry it so a data purge can remove them (ADR-0011). */
+    eventId?: string;
+  },
 ): Promise<void> {
   const payload = emailPayloadSchemas[email.kind].parse(email.payload);
   await db.insert(emailOutbox).values({
@@ -32,6 +40,7 @@ export async function enqueueEmail<K extends EmailKind>(
     locale: email.locale,
     payload,
     organizationId: email.organizationId ?? null,
+    eventId: email.eventId ?? null,
   });
 }
 

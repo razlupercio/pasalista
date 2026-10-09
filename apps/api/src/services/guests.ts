@@ -26,7 +26,7 @@ import {
 import { newAccessToken } from "../crypto/key-encryption.ts";
 import { ApiError } from "../errors.ts";
 import { nowOf, type ServiceDeps, type Transaction } from "./context.ts";
-import { countActiveAttendees, findManagedEvent } from "./events.ts";
+import { assertNotPurged, countActiveAttendees, findManagedEvent } from "./events.ts";
 import { audit, type AuditAction } from "./audit.ts";
 import { issueTickets, resendTicketEmail } from "./ticket-issuer.ts";
 
@@ -137,6 +137,7 @@ async function addGuests(
   guests: (GuestInput & { line?: number })[],
   source: "manual" | "import",
 ): Promise<{ added: number; alreadyOnList: (GuestInput & { line?: number })[] }> {
+  assertNotPurged(event);
   const emails = guests.map((g) => g.email);
   const existing =
     emails.length === 0
@@ -244,6 +245,7 @@ export async function sendPendingInvitations(
 ): Promise<number> {
   return deps.db.transaction(async (tx) => {
     const event = await findManagedEvent(tx, userId, eventId, { forUpdate: true });
+    assertNotPurged(event);
     if (event.status !== "published") {
       throw new ApiError(409, "invalid_state", "Publish the event before sending invitations");
     }

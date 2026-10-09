@@ -112,8 +112,16 @@ export const eventSchema = z.object({
   ...eventFields,
   status: z.enum(eventStatuses),
   registeredCount: z.number().int(),
+  /** Set once personal data was purged; the counts below are then final. */
+  purgedAt: instantSchema.nullable(),
+  checkedInCount: z.number().int(),
   createdAt: instantSchema,
   updatedAt: instantSchema,
+});
+
+export const purgeEventInputSchema = z.object({
+  /** The organizer types the event slug to confirm an irreversible purge. */
+  confirmSlug: z.string().min(1).max(64),
 });
 export type Event = z.infer<typeof eventSchema>;
 

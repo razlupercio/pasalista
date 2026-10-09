@@ -7,6 +7,7 @@ export type AuditAction =
   | "event.close"
   | "event.delete"
   | "event.key_rotate"
+  | "event.purge"
   | "guests.add"
   | "guests.import"
   | "invitations.send"
