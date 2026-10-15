@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "@pasalista/config": "workspace:*",
-    "@types/node": "^24.0.0",
+    "@types/node": "^26.6.5",
     "@types/pg": "^8.23.1",
     "drizzle-kit": "^0.31.11",
     "typescript": "~6.0.3"
