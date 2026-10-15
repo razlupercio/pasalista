@@ -21,10 +21,10 @@
     "better-auth": "^1.7.7",
     "drizzle-orm": "^0.45.4",
     "hono": "^4.13.13",
-    "nodemailer": "^10.0.16",
+    "nodemailer": "^10.1.0",
     "pino": "^10.4.0",
     "qrcode": "^1.5.4",
-    "zod": "^4.6.5"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@pasalista/config": "workspace:*",
