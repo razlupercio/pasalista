@@ -18,6 +18,6 @@
   "devDependencies": {
     "@pasalista/config": "workspace:*",
     "typescript": "~6.0.3",
-    "vitest": "^5.0.3"
+    "vitest": "^5.0.5"
   }
 }
